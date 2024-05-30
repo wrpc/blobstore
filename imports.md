@@ -2,16 +2,16 @@
 <ul>
 <li>Imports:
 <ul>
-<li>interface <a href="#wasi:io_error_0.2.0"><code>wasi:io/error@0.2.0</code></a></li>
-<li>interface <a href="#wasi:io_poll_0.2.0"><code>wasi:io/poll@0.2.0</code></a></li>
-<li>interface <a href="#wasi:io_streams_0.2.0"><code>wasi:io/streams@0.2.0</code></a></li>
-<li>interface <a href="#wasi:blobstore_types_0.2.0_draft"><code>wasi:blobstore/types@0.2.0-draft</code></a></li>
-<li>interface <a href="#wasi:blobstore_container_0.2.0_draft"><code>wasi:blobstore/container@0.2.0-draft</code></a></li>
-<li>interface <a href="#wasi:blobstore_blobstore_0.2.0_draft"><code>wasi:blobstore/blobstore@0.2.0-draft</code></a></li>
+<li>interface <a href="#wasi_io_error_0_2_0"><code>wasi:io/error@0.2.0</code></a></li>
+<li>interface <a href="#wasi_io_poll_0_2_0"><code>wasi:io/poll@0.2.0</code></a></li>
+<li>interface <a href="#wasi_io_streams_0_2_0"><code>wasi:io/streams@0.2.0</code></a></li>
+<li>interface <a href="#wasi_blobstore_types_0_2_0_draft"><code>wasi:blobstore/types@0.2.0-draft</code></a></li>
+<li>interface <a href="#wrpc_blobstore_types_0_1_0"><code>wrpc:blobstore/types@0.1.0</code></a></li>
+<li>interface <a href="#wrpc_blobstore_blobstore_0_1_0"><code>wrpc:blobstore/blobstore@0.1.0</code></a></li>
 </ul>
 </li>
 </ul>
-<h2><a name="wasi:io_error_0.2.0"></a>Import interface wasi:io/error@0.2.0</h2>
+<h2><a name="wasi_io_error_0_2_0"></a>Import interface wasi:io/error@0.2.0</h2>
 <hr />
 <h3>Types</h3>
 <h4><a name="error"></a><code>resource error</code></h4>
@@ -31,7 +31,7 @@ error-code type, using the function
 <h2>The set of functions which can &quot;downcast&quot; an <a href="#error"><code>error</code></a> into a more
 concrete type is open.</h2>
 <h3>Functions</h3>
-<h4><a name="method_error.to_debug_string"></a><code>[method]error.to-debug-string: func</code></h4>
+<h4><a name="method_error_to_debug_string"></a><code>[method]error.to-debug-string: func</code></h4>
 <p>Returns a string that is suitable to assist humans in debugging
 this error.</p>
 <p>WARNING: The returned string should not be consumed mechanically!
@@ -40,13 +40,13 @@ details. Parsing this string is a major platform-compatibility
 hazard.</p>
 <h5>Params</h5>
 <ul>
-<li><a name="method_error.to_debug_string.self"></a><code>self</code>: borrow&lt;<a href="#error"><a href="#error"><code>error</code></a></a>&gt;</li>
+<li><a name="method_error_to_debug_string.self"></a><code>self</code>: borrow&lt;<a href="#error"><a href="#error"><code>error</code></a></a>&gt;</li>
 </ul>
 <h5>Return values</h5>
 <ul>
-<li><a name="method_error.to_debug_string.0"></a> <code>string</code></li>
+<li><a name="method_error_to_debug_string.0"></a> <code>string</code></li>
 </ul>
-<h2><a name="wasi:io_poll_0.2.0"></a>Import interface wasi:io/poll@0.2.0</h2>
+<h2><a name="wasi_io_poll_0_2_0"></a>Import interface wasi:io/poll@0.2.0</h2>
 <p>A poll API intended to let users wait for I/O events on multiple handles
 at once.</p>
 <hr />
@@ -54,25 +54,25 @@ at once.</p>
 <h4><a name="pollable"></a><code>resource pollable</code></h4>
 <h2><a href="#pollable"><code>pollable</code></a> represents a single I/O event which may be ready, or not.</h2>
 <h3>Functions</h3>
-<h4><a name="method_pollable.ready"></a><code>[method]pollable.ready: func</code></h4>
+<h4><a name="method_pollable_ready"></a><code>[method]pollable.ready: func</code></h4>
 <p>Return the readiness of a pollable. This function never blocks.</p>
 <p>Returns <code>true</code> when the pollable is ready, and <code>false</code> otherwise.</p>
 <h5>Params</h5>
 <ul>
-<li><a name="method_pollable.ready.self"></a><code>self</code>: borrow&lt;<a href="#pollable"><a href="#pollable"><code>pollable</code></a></a>&gt;</li>
+<li><a name="method_pollable_ready.self"></a><code>self</code>: borrow&lt;<a href="#pollable"><a href="#pollable"><code>pollable</code></a></a>&gt;</li>
 </ul>
 <h5>Return values</h5>
 <ul>
-<li><a name="method_pollable.ready.0"></a> <code>bool</code></li>
+<li><a name="method_pollable_ready.0"></a> <code>bool</code></li>
 </ul>
-<h4><a name="method_pollable.block"></a><code>[method]pollable.block: func</code></h4>
+<h4><a name="method_pollable_block"></a><code>[method]pollable.block: func</code></h4>
 <p><code>block</code> returns immediately if the pollable is ready, and otherwise
 blocks until ready.</p>
 <p>This function is equivalent to calling <code>poll.poll</code> on a list
 containing only this pollable.</p>
 <h5>Params</h5>
 <ul>
-<li><a name="method_pollable.block.self"></a><code>self</code>: borrow&lt;<a href="#pollable"><a href="#pollable"><code>pollable</code></a></a>&gt;</li>
+<li><a name="method_pollable_block.self"></a><code>self</code>: borrow&lt;<a href="#pollable"><a href="#pollable"><code>pollable</code></a></a>&gt;</li>
 </ul>
 <h4><a name="poll"></a><code>poll: func</code></h4>
 <p>Poll for completion on a set of pollables.</p>
@@ -96,7 +96,7 @@ being reaedy for I/O.</p>
 <ul>
 <li><a name="poll.0"></a> list&lt;<code>u32</code>&gt;</li>
 </ul>
-<h2><a name="wasi:io_streams_0.2.0"></a>Import interface wasi:io/streams@0.2.0</h2>
+<h2><a name="wasi_io_streams_0_2_0"></a>Import interface wasi:io/streams@0.2.0</h2>
 <p>WASI I/O is an I/O abstraction API which is currently focused on providing
 stream types.</p>
 <p>In the future, the component model is expected to add built-in stream types;
@@ -142,7 +142,7 @@ promptly, which could even be zero. To wait for the stream to be ready to
 accept data, the <code>subscribe</code> function to obtain a <a href="#pollable"><code>pollable</code></a> which can be
 polled for using <code>wasi:io/poll</code>.</h2>
 <h3>Functions</h3>
-<h4><a name="method_input_stream.read"></a><code>[method]input-stream.read: func</code></h4>
+<h4><a name="method_input_stream_read"></a><code>[method]input-stream.read: func</code></h4>
 <p>Perform a non-blocking read from the stream.</p>
 <p>When the source of a <code>read</code> is binary data, the bytes from the source
 are returned verbatim. When the source of a <code>read</code> is known to the
@@ -166,51 +166,51 @@ as a return value by the callee. The callee may return a list of bytes
 less than <code>len</code> in size while more bytes are available for reading.</p>
 <h5>Params</h5>
 <ul>
-<li><a name="method_input_stream.read.self"></a><code>self</code>: borrow&lt;<a href="#input_stream"><a href="#input_stream"><code>input-stream</code></a></a>&gt;</li>
-<li><a name="method_input_stream.read.len"></a><code>len</code>: <code>u64</code></li>
+<li><a name="method_input_stream_read.self"></a><code>self</code>: borrow&lt;<a href="#input_stream"><a href="#input_stream"><code>input-stream</code></a></a>&gt;</li>
+<li><a name="method_input_stream_read.len"></a><code>len</code>: <code>u64</code></li>
 </ul>
 <h5>Return values</h5>
 <ul>
-<li><a name="method_input_stream.read.0"></a> result&lt;list&lt;<code>u8</code>&gt;, <a href="#stream_error"><a href="#stream_error"><code>stream-error</code></a></a>&gt;</li>
+<li><a name="method_input_stream_read.0"></a> result&lt;list&lt;<code>u8</code>&gt;, <a href="#stream_error"><a href="#stream_error"><code>stream-error</code></a></a>&gt;</li>
 </ul>
-<h4><a name="method_input_stream.blocking_read"></a><code>[method]input-stream.blocking-read: func</code></h4>
+<h4><a name="method_input_stream_blocking_read"></a><code>[method]input-stream.blocking-read: func</code></h4>
 <p>Read bytes from a stream, after blocking until at least one byte can
 be read. Except for blocking, behavior is identical to <code>read</code>.</p>
 <h5>Params</h5>
 <ul>
-<li><a name="method_input_stream.blocking_read.self"></a><code>self</code>: borrow&lt;<a href="#input_stream"><a href="#input_stream"><code>input-stream</code></a></a>&gt;</li>
-<li><a name="method_input_stream.blocking_read.len"></a><code>len</code>: <code>u64</code></li>
+<li><a name="method_input_stream_blocking_read.self"></a><code>self</code>: borrow&lt;<a href="#input_stream"><a href="#input_stream"><code>input-stream</code></a></a>&gt;</li>
+<li><a name="method_input_stream_blocking_read.len"></a><code>len</code>: <code>u64</code></li>
 </ul>
 <h5>Return values</h5>
 <ul>
-<li><a name="method_input_stream.blocking_read.0"></a> result&lt;list&lt;<code>u8</code>&gt;, <a href="#stream_error"><a href="#stream_error"><code>stream-error</code></a></a>&gt;</li>
+<li><a name="method_input_stream_blocking_read.0"></a> result&lt;list&lt;<code>u8</code>&gt;, <a href="#stream_error"><a href="#stream_error"><code>stream-error</code></a></a>&gt;</li>
 </ul>
-<h4><a name="method_input_stream.skip"></a><code>[method]input-stream.skip: func</code></h4>
+<h4><a name="method_input_stream_skip"></a><code>[method]input-stream.skip: func</code></h4>
 <p>Skip bytes from a stream. Returns number of bytes skipped.</p>
 <p>Behaves identical to <code>read</code>, except instead of returning a list
 of bytes, returns the number of bytes consumed from the stream.</p>
 <h5>Params</h5>
 <ul>
-<li><a name="method_input_stream.skip.self"></a><code>self</code>: borrow&lt;<a href="#input_stream"><a href="#input_stream"><code>input-stream</code></a></a>&gt;</li>
-<li><a name="method_input_stream.skip.len"></a><code>len</code>: <code>u64</code></li>
+<li><a name="method_input_stream_skip.self"></a><code>self</code>: borrow&lt;<a href="#input_stream"><a href="#input_stream"><code>input-stream</code></a></a>&gt;</li>
+<li><a name="method_input_stream_skip.len"></a><code>len</code>: <code>u64</code></li>
 </ul>
 <h5>Return values</h5>
 <ul>
-<li><a name="method_input_stream.skip.0"></a> result&lt;<code>u64</code>, <a href="#stream_error"><a href="#stream_error"><code>stream-error</code></a></a>&gt;</li>
+<li><a name="method_input_stream_skip.0"></a> result&lt;<code>u64</code>, <a href="#stream_error"><a href="#stream_error"><code>stream-error</code></a></a>&gt;</li>
 </ul>
-<h4><a name="method_input_stream.blocking_skip"></a><code>[method]input-stream.blocking-skip: func</code></h4>
+<h4><a name="method_input_stream_blocking_skip"></a><code>[method]input-stream.blocking-skip: func</code></h4>
 <p>Skip bytes from a stream, after blocking until at least one byte
 can be skipped. Except for blocking behavior, identical to <code>skip</code>.</p>
 <h5>Params</h5>
 <ul>
-<li><a name="method_input_stream.blocking_skip.self"></a><code>self</code>: borrow&lt;<a href="#input_stream"><a href="#input_stream"><code>input-stream</code></a></a>&gt;</li>
-<li><a name="method_input_stream.blocking_skip.len"></a><code>len</code>: <code>u64</code></li>
+<li><a name="method_input_stream_blocking_skip.self"></a><code>self</code>: borrow&lt;<a href="#input_stream"><a href="#input_stream"><code>input-stream</code></a></a>&gt;</li>
+<li><a name="method_input_stream_blocking_skip.len"></a><code>len</code>: <code>u64</code></li>
 </ul>
 <h5>Return values</h5>
 <ul>
-<li><a name="method_input_stream.blocking_skip.0"></a> result&lt;<code>u64</code>, <a href="#stream_error"><a href="#stream_error"><code>stream-error</code></a></a>&gt;</li>
+<li><a name="method_input_stream_blocking_skip.0"></a> result&lt;<code>u64</code>, <a href="#stream_error"><a href="#stream_error"><code>stream-error</code></a></a>&gt;</li>
 </ul>
-<h4><a name="method_input_stream.subscribe"></a><code>[method]input-stream.subscribe: func</code></h4>
+<h4><a name="method_input_stream_subscribe"></a><code>[method]input-stream.subscribe: func</code></h4>
 <p>Create a <a href="#pollable"><code>pollable</code></a> which will resolve once either the specified stream
 has bytes available to read or the other end of the stream has been
 closed.
@@ -219,13 +219,13 @@ Implementations may trap if the <a href="#input_stream"><code>input-stream</code
 all derived <a href="#pollable"><code>pollable</code></a>s created with this function are dropped.</p>
 <h5>Params</h5>
 <ul>
-<li><a name="method_input_stream.subscribe.self"></a><code>self</code>: borrow&lt;<a href="#input_stream"><a href="#input_stream"><code>input-stream</code></a></a>&gt;</li>
+<li><a name="method_input_stream_subscribe.self"></a><code>self</code>: borrow&lt;<a href="#input_stream"><a href="#input_stream"><code>input-stream</code></a></a>&gt;</li>
 </ul>
 <h5>Return values</h5>
 <ul>
-<li><a name="method_input_stream.subscribe.0"></a> own&lt;<a href="#pollable"><a href="#pollable"><code>pollable</code></a></a>&gt;</li>
+<li><a name="method_input_stream_subscribe.0"></a> own&lt;<a href="#pollable"><a href="#pollable"><code>pollable</code></a></a>&gt;</li>
 </ul>
-<h4><a name="method_output_stream.check_write"></a><code>[method]output-stream.check-write: func</code></h4>
+<h4><a name="method_output_stream_check_write"></a><code>[method]output-stream.check-write: func</code></h4>
 <p>Check readiness for writing. This function never blocks.</p>
 <p>Returns the number of bytes permitted for the next call to <code>write</code>,
 or an error. Calling <code>write</code> with more bytes than this function has
@@ -235,13 +235,13 @@ become ready when this function will report at least 1 byte, or an
 error.</p>
 <h5>Params</h5>
 <ul>
-<li><a name="method_output_stream.check_write.self"></a><code>self</code>: borrow&lt;<a href="#output_stream"><a href="#output_stream"><code>output-stream</code></a></a>&gt;</li>
+<li><a name="method_output_stream_check_write.self"></a><code>self</code>: borrow&lt;<a href="#output_stream"><a href="#output_stream"><code>output-stream</code></a></a>&gt;</li>
 </ul>
 <h5>Return values</h5>
 <ul>
-<li><a name="method_output_stream.check_write.0"></a> result&lt;<code>u64</code>, <a href="#stream_error"><a href="#stream_error"><code>stream-error</code></a></a>&gt;</li>
+<li><a name="method_output_stream_check_write.0"></a> result&lt;<code>u64</code>, <a href="#stream_error"><a href="#stream_error"><code>stream-error</code></a></a>&gt;</li>
 </ul>
-<h4><a name="method_output_stream.write"></a><code>[method]output-stream.write: func</code></h4>
+<h4><a name="method_output_stream_write"></a><code>[method]output-stream.write: func</code></h4>
 <p>Perform a write. This function never blocks.</p>
 <p>When the destination of a <code>write</code> is binary data, the bytes from
 <code>contents</code> are written verbatim. When the destination of a <code>write</code> is
@@ -254,14 +254,14 @@ length of less than or equal to n. Otherwise, this function will trap.</p>
 the last call to check-write provided a permit.</p>
 <h5>Params</h5>
 <ul>
-<li><a name="method_output_stream.write.self"></a><code>self</code>: borrow&lt;<a href="#output_stream"><a href="#output_stream"><code>output-stream</code></a></a>&gt;</li>
-<li><a name="method_output_stream.write.contents"></a><code>contents</code>: list&lt;<code>u8</code>&gt;</li>
+<li><a name="method_output_stream_write.self"></a><code>self</code>: borrow&lt;<a href="#output_stream"><a href="#output_stream"><code>output-stream</code></a></a>&gt;</li>
+<li><a name="method_output_stream_write.contents"></a><code>contents</code>: list&lt;<code>u8</code>&gt;</li>
 </ul>
 <h5>Return values</h5>
 <ul>
-<li><a name="method_output_stream.write.0"></a> result&lt;_, <a href="#stream_error"><a href="#stream_error"><code>stream-error</code></a></a>&gt;</li>
+<li><a name="method_output_stream_write.0"></a> result&lt;_, <a href="#stream_error"><a href="#stream_error"><code>stream-error</code></a></a>&gt;</li>
 </ul>
-<h4><a name="method_output_stream.blocking_write_and_flush"></a><code>[method]output-stream.blocking-write-and-flush: func</code></h4>
+<h4><a name="method_output_stream_blocking_write_and_flush"></a><code>[method]output-stream.blocking-write-and-flush: func</code></h4>
 <p>Perform a write of up to 4096 bytes, and then flush the stream. Block
 until all of these operations are complete, or an error occurs.</p>
 <p>This is a convenience wrapper around the use of <code>check-write</code>,
@@ -285,14 +285,14 @@ let _ = this.check-write();         // eliding error handling
 </code></pre>
 <h5>Params</h5>
 <ul>
-<li><a name="method_output_stream.blocking_write_and_flush.self"></a><code>self</code>: borrow&lt;<a href="#output_stream"><a href="#output_stream"><code>output-stream</code></a></a>&gt;</li>
-<li><a name="method_output_stream.blocking_write_and_flush.contents"></a><code>contents</code>: list&lt;<code>u8</code>&gt;</li>
+<li><a name="method_output_stream_blocking_write_and_flush.self"></a><code>self</code>: borrow&lt;<a href="#output_stream"><a href="#output_stream"><code>output-stream</code></a></a>&gt;</li>
+<li><a name="method_output_stream_blocking_write_and_flush.contents"></a><code>contents</code>: list&lt;<code>u8</code>&gt;</li>
 </ul>
 <h5>Return values</h5>
 <ul>
-<li><a name="method_output_stream.blocking_write_and_flush.0"></a> result&lt;_, <a href="#stream_error"><a href="#stream_error"><code>stream-error</code></a></a>&gt;</li>
+<li><a name="method_output_stream_blocking_write_and_flush.0"></a> result&lt;_, <a href="#stream_error"><a href="#stream_error"><code>stream-error</code></a></a>&gt;</li>
 </ul>
-<h4><a name="method_output_stream.flush"></a><code>[method]output-stream.flush: func</code></h4>
+<h4><a name="method_output_stream_flush"></a><code>[method]output-stream.flush: func</code></h4>
 <p>Request to flush buffered output. This function never blocks.</p>
 <p>This tells the output-stream that the caller intends any buffered
 output to be flushed. the output which is expected to be flushed
@@ -303,24 +303,24 @@ completed. The <code>subscribe</code> pollable will become ready when the
 flush has completed and the stream can accept more writes.</p>
 <h5>Params</h5>
 <ul>
-<li><a name="method_output_stream.flush.self"></a><code>self</code>: borrow&lt;<a href="#output_stream"><a href="#output_stream"><code>output-stream</code></a></a>&gt;</li>
+<li><a name="method_output_stream_flush.self"></a><code>self</code>: borrow&lt;<a href="#output_stream"><a href="#output_stream"><code>output-stream</code></a></a>&gt;</li>
 </ul>
 <h5>Return values</h5>
 <ul>
-<li><a name="method_output_stream.flush.0"></a> result&lt;_, <a href="#stream_error"><a href="#stream_error"><code>stream-error</code></a></a>&gt;</li>
+<li><a name="method_output_stream_flush.0"></a> result&lt;_, <a href="#stream_error"><a href="#stream_error"><code>stream-error</code></a></a>&gt;</li>
 </ul>
-<h4><a name="method_output_stream.blocking_flush"></a><code>[method]output-stream.blocking-flush: func</code></h4>
+<h4><a name="method_output_stream_blocking_flush"></a><code>[method]output-stream.blocking-flush: func</code></h4>
 <p>Request to flush buffered output, and block until flush completes
 and stream is ready for writing again.</p>
 <h5>Params</h5>
 <ul>
-<li><a name="method_output_stream.blocking_flush.self"></a><code>self</code>: borrow&lt;<a href="#output_stream"><a href="#output_stream"><code>output-stream</code></a></a>&gt;</li>
+<li><a name="method_output_stream_blocking_flush.self"></a><code>self</code>: borrow&lt;<a href="#output_stream"><a href="#output_stream"><code>output-stream</code></a></a>&gt;</li>
 </ul>
 <h5>Return values</h5>
 <ul>
-<li><a name="method_output_stream.blocking_flush.0"></a> result&lt;_, <a href="#stream_error"><a href="#stream_error"><code>stream-error</code></a></a>&gt;</li>
+<li><a name="method_output_stream_blocking_flush.0"></a> result&lt;_, <a href="#stream_error"><a href="#stream_error"><code>stream-error</code></a></a>&gt;</li>
 </ul>
-<h4><a name="method_output_stream.subscribe"></a><code>[method]output-stream.subscribe: func</code></h4>
+<h4><a name="method_output_stream_subscribe"></a><code>[method]output-stream.subscribe: func</code></h4>
 <p>Create a <a href="#pollable"><code>pollable</code></a> which will resolve once the output-stream
 is ready for more writing, or an error has occured. When this
 pollable is ready, <code>check-write</code> will return <code>ok(n)</code> with n&gt;0, or an
@@ -331,13 +331,13 @@ Implementations may trap if the <a href="#output_stream"><code>output-stream</co
 all derived <a href="#pollable"><code>pollable</code></a>s created with this function are dropped.</p>
 <h5>Params</h5>
 <ul>
-<li><a name="method_output_stream.subscribe.self"></a><code>self</code>: borrow&lt;<a href="#output_stream"><a href="#output_stream"><code>output-stream</code></a></a>&gt;</li>
+<li><a name="method_output_stream_subscribe.self"></a><code>self</code>: borrow&lt;<a href="#output_stream"><a href="#output_stream"><code>output-stream</code></a></a>&gt;</li>
 </ul>
 <h5>Return values</h5>
 <ul>
-<li><a name="method_output_stream.subscribe.0"></a> own&lt;<a href="#pollable"><a href="#pollable"><code>pollable</code></a></a>&gt;</li>
+<li><a name="method_output_stream_subscribe.0"></a> own&lt;<a href="#pollable"><a href="#pollable"><code>pollable</code></a></a>&gt;</li>
 </ul>
-<h4><a name="method_output_stream.write_zeroes"></a><code>[method]output-stream.write-zeroes: func</code></h4>
+<h4><a name="method_output_stream_write_zeroes"></a><code>[method]output-stream.write-zeroes: func</code></h4>
 <p>Write zeroes to a stream.</p>
 <p>This should be used precisely like <code>write</code> with the exact same
 preconditions (must use check-write first), but instead of
@@ -345,14 +345,14 @@ passing a list of bytes, you simply pass the number of zero-bytes
 that should be written.</p>
 <h5>Params</h5>
 <ul>
-<li><a name="method_output_stream.write_zeroes.self"></a><code>self</code>: borrow&lt;<a href="#output_stream"><a href="#output_stream"><code>output-stream</code></a></a>&gt;</li>
-<li><a name="method_output_stream.write_zeroes.len"></a><code>len</code>: <code>u64</code></li>
+<li><a name="method_output_stream_write_zeroes.self"></a><code>self</code>: borrow&lt;<a href="#output_stream"><a href="#output_stream"><code>output-stream</code></a></a>&gt;</li>
+<li><a name="method_output_stream_write_zeroes.len"></a><code>len</code>: <code>u64</code></li>
 </ul>
 <h5>Return values</h5>
 <ul>
-<li><a name="method_output_stream.write_zeroes.0"></a> result&lt;_, <a href="#stream_error"><a href="#stream_error"><code>stream-error</code></a></a>&gt;</li>
+<li><a name="method_output_stream_write_zeroes.0"></a> result&lt;_, <a href="#stream_error"><a href="#stream_error"><code>stream-error</code></a></a>&gt;</li>
 </ul>
-<h4><a name="method_output_stream.blocking_write_zeroes_and_flush"></a><code>[method]output-stream.blocking-write-zeroes-and-flush: func</code></h4>
+<h4><a name="method_output_stream_blocking_write_zeroes_and_flush"></a><code>[method]output-stream.blocking-write-zeroes-and-flush: func</code></h4>
 <p>Perform a write of up to 4096 zeroes, and then flush the stream.
 Block until all of these operations are complete, or an error
 occurs.</p>
@@ -376,14 +376,14 @@ let _ = this.check-write();         // eliding error handling
 </code></pre>
 <h5>Params</h5>
 <ul>
-<li><a name="method_output_stream.blocking_write_zeroes_and_flush.self"></a><code>self</code>: borrow&lt;<a href="#output_stream"><a href="#output_stream"><code>output-stream</code></a></a>&gt;</li>
-<li><a name="method_output_stream.blocking_write_zeroes_and_flush.len"></a><code>len</code>: <code>u64</code></li>
+<li><a name="method_output_stream_blocking_write_zeroes_and_flush.self"></a><code>self</code>: borrow&lt;<a href="#output_stream"><a href="#output_stream"><code>output-stream</code></a></a>&gt;</li>
+<li><a name="method_output_stream_blocking_write_zeroes_and_flush.len"></a><code>len</code>: <code>u64</code></li>
 </ul>
 <h5>Return values</h5>
 <ul>
-<li><a name="method_output_stream.blocking_write_zeroes_and_flush.0"></a> result&lt;_, <a href="#stream_error"><a href="#stream_error"><code>stream-error</code></a></a>&gt;</li>
+<li><a name="method_output_stream_blocking_write_zeroes_and_flush.0"></a> result&lt;_, <a href="#stream_error"><a href="#stream_error"><code>stream-error</code></a></a>&gt;</li>
 </ul>
-<h4><a name="method_output_stream.splice"></a><code>[method]output-stream.splice: func</code></h4>
+<h4><a name="method_output_stream_splice"></a><code>[method]output-stream.splice: func</code></h4>
 <p>Read from one stream and write to another.</p>
 <p>The behavior of splice is equivelant to:</p>
 <ol>
@@ -398,30 +398,30 @@ let _ = this.check-write();         // eliding error handling
 than <code>len</code>.</p>
 <h5>Params</h5>
 <ul>
-<li><a name="method_output_stream.splice.self"></a><code>self</code>: borrow&lt;<a href="#output_stream"><a href="#output_stream"><code>output-stream</code></a></a>&gt;</li>
-<li><a name="method_output_stream.splice.src"></a><code>src</code>: borrow&lt;<a href="#input_stream"><a href="#input_stream"><code>input-stream</code></a></a>&gt;</li>
-<li><a name="method_output_stream.splice.len"></a><code>len</code>: <code>u64</code></li>
+<li><a name="method_output_stream_splice.self"></a><code>self</code>: borrow&lt;<a href="#output_stream"><a href="#output_stream"><code>output-stream</code></a></a>&gt;</li>
+<li><a name="method_output_stream_splice.src"></a><code>src</code>: borrow&lt;<a href="#input_stream"><a href="#input_stream"><code>input-stream</code></a></a>&gt;</li>
+<li><a name="method_output_stream_splice.len"></a><code>len</code>: <code>u64</code></li>
 </ul>
 <h5>Return values</h5>
 <ul>
-<li><a name="method_output_stream.splice.0"></a> result&lt;<code>u64</code>, <a href="#stream_error"><a href="#stream_error"><code>stream-error</code></a></a>&gt;</li>
+<li><a name="method_output_stream_splice.0"></a> result&lt;<code>u64</code>, <a href="#stream_error"><a href="#stream_error"><code>stream-error</code></a></a>&gt;</li>
 </ul>
-<h4><a name="method_output_stream.blocking_splice"></a><code>[method]output-stream.blocking-splice: func</code></h4>
+<h4><a name="method_output_stream_blocking_splice"></a><code>[method]output-stream.blocking-splice: func</code></h4>
 <p>Read from one stream and write to another, with blocking.</p>
 <p>This is similar to <code>splice</code>, except that it blocks until the
 <a href="#output_stream"><code>output-stream</code></a> is ready for writing, and the <a href="#input_stream"><code>input-stream</code></a>
 is ready for reading, before performing the <code>splice</code>.</p>
 <h5>Params</h5>
 <ul>
-<li><a name="method_output_stream.blocking_splice.self"></a><code>self</code>: borrow&lt;<a href="#output_stream"><a href="#output_stream"><code>output-stream</code></a></a>&gt;</li>
-<li><a name="method_output_stream.blocking_splice.src"></a><code>src</code>: borrow&lt;<a href="#input_stream"><a href="#input_stream"><code>input-stream</code></a></a>&gt;</li>
-<li><a name="method_output_stream.blocking_splice.len"></a><code>len</code>: <code>u64</code></li>
+<li><a name="method_output_stream_blocking_splice.self"></a><code>self</code>: borrow&lt;<a href="#output_stream"><a href="#output_stream"><code>output-stream</code></a></a>&gt;</li>
+<li><a name="method_output_stream_blocking_splice.src"></a><code>src</code>: borrow&lt;<a href="#input_stream"><a href="#input_stream"><code>input-stream</code></a></a>&gt;</li>
+<li><a name="method_output_stream_blocking_splice.len"></a><code>len</code>: <code>u64</code></li>
 </ul>
 <h5>Return values</h5>
 <ul>
-<li><a name="method_output_stream.blocking_splice.0"></a> result&lt;<code>u64</code>, <a href="#stream_error"><a href="#stream_error"><code>stream-error</code></a></a>&gt;</li>
+<li><a name="method_output_stream_blocking_splice.0"></a> result&lt;<code>u64</code>, <a href="#stream_error"><a href="#stream_error"><code>stream-error</code></a></a>&gt;</li>
 </ul>
-<h2><a name="wasi:blobstore_types_0.2.0_draft"></a>Import interface wasi:blobstore/types@0.2.0-draft</h2>
+<h2><a name="wasi_blobstore_types_0_2_0_draft"></a>Import interface wasi:blobstore/types@0.2.0-draft</h2>
 <p>Types used by blobstore</p>
 <hr />
 <h3>Types</h3>
@@ -472,7 +472,7 @@ https://github.com/WebAssembly/wasi-blob-store/issues/7
 <p>the object's name
 </li>
 <li>
-<p><a name="object_metadata.container"></a><a href="#container"><code>container</code></a>: <a href="#container_name"><a href="#container_name"><code>container-name</code></a></a></p>
+<p><a name="object_metadata.container"></a><code>container</code>: <a href="#container_name"><a href="#container_name"><code>container-name</code></a></a></p>
 <p>the object's parent container
 </li>
 <li>
@@ -488,7 +488,7 @@ https://github.com/WebAssembly/wasi-blob-store/issues/7
 <p>identifier for an object that includes its container name</p>
 <h5>Record Fields</h5>
 <ul>
-<li><a name="object_id.container"></a><a href="#container"><code>container</code></a>: <a href="#container_name"><a href="#container_name"><code>container-name</code></a></a></li>
+<li><a name="object_id.container"></a><code>container</code>: <a href="#container_name"><a href="#container_name"><code>container-name</code></a></a></li>
 <li><a name="object_id.object"></a><code>object</code>: <a href="#object_name"><a href="#object_name"><code>object-name</code></a></a></li>
 </ul>
 <h4><a name="outgoing_value"></a><code>resource outgoing-value</code></h4>
@@ -515,279 +515,168 @@ Soon: switch to <code>resource incoming-value { ... }</code></li>
 <p>
 ----
 <h3>Functions</h3>
-<h4><a name="static_outgoing_value.new_outgoing_value"></a><code>[static]outgoing-value.new-outgoing-value: func</code></h4>
+<h4><a name="static_outgoing_value_new_outgoing_value"></a><code>[static]outgoing-value.new-outgoing-value: func</code></h4>
 <h5>Return values</h5>
 <ul>
-<li><a name="static_outgoing_value.new_outgoing_value.0"></a> own&lt;<a href="#outgoing_value"><a href="#outgoing_value"><code>outgoing-value</code></a></a>&gt;</li>
+<li><a name="static_outgoing_value_new_outgoing_value.0"></a> own&lt;<a href="#outgoing_value"><a href="#outgoing_value"><code>outgoing-value</code></a></a>&gt;</li>
 </ul>
-<h4><a name="method_outgoing_value.outgoing_value_write_body"></a><code>[method]outgoing-value.outgoing-value-write-body: func</code></h4>
+<h4><a name="method_outgoing_value_outgoing_value_write_body"></a><code>[method]outgoing-value.outgoing-value-write-body: func</code></h4>
 <h5>Params</h5>
 <ul>
-<li><a name="method_outgoing_value.outgoing_value_write_body.self"></a><code>self</code>: borrow&lt;<a href="#outgoing_value"><a href="#outgoing_value"><code>outgoing-value</code></a></a>&gt;</li>
+<li><a name="method_outgoing_value_outgoing_value_write_body.self"></a><code>self</code>: borrow&lt;<a href="#outgoing_value"><a href="#outgoing_value"><code>outgoing-value</code></a></a>&gt;</li>
 </ul>
 <h5>Return values</h5>
 <ul>
-<li><a name="method_outgoing_value.outgoing_value_write_body.0"></a> result&lt;own&lt;<a href="#output_stream"><a href="#output_stream"><code>output-stream</code></a></a>&gt;&gt;</li>
+<li><a name="method_outgoing_value_outgoing_value_write_body.0"></a> result&lt;own&lt;<a href="#output_stream"><a href="#output_stream"><code>output-stream</code></a></a>&gt;&gt;</li>
 </ul>
-<h4><a name="static_incoming_value.incoming_value_consume_sync"></a><code>[static]incoming-value.incoming-value-consume-sync: func</code></h4>
+<h4><a name="static_incoming_value_incoming_value_consume_sync"></a><code>[static]incoming-value.incoming-value-consume-sync: func</code></h4>
 <h5>Params</h5>
 <ul>
-<li><a name="static_incoming_value.incoming_value_consume_sync.this"></a><code>this</code>: own&lt;<a href="#incoming_value"><a href="#incoming_value"><code>incoming-value</code></a></a>&gt;</li>
+<li><a name="static_incoming_value_incoming_value_consume_sync.this"></a><code>this</code>: own&lt;<a href="#incoming_value"><a href="#incoming_value"><code>incoming-value</code></a></a>&gt;</li>
 </ul>
 <h5>Return values</h5>
 <ul>
-<li><a name="static_incoming_value.incoming_value_consume_sync.0"></a> result&lt;<a href="#incoming_value_sync_body"><a href="#incoming_value_sync_body"><code>incoming-value-sync-body</code></a></a>, <a href="#error"><a href="#error"><code>error</code></a></a>&gt;</li>
+<li><a name="static_incoming_value_incoming_value_consume_sync.0"></a> result&lt;<a href="#incoming_value_sync_body"><a href="#incoming_value_sync_body"><code>incoming-value-sync-body</code></a></a>, <a href="#error"><a href="#error"><code>error</code></a></a>&gt;</li>
 </ul>
-<h4><a name="static_incoming_value.incoming_value_consume_async"></a><code>[static]incoming-value.incoming-value-consume-async: func</code></h4>
+<h4><a name="static_incoming_value_incoming_value_consume_async"></a><code>[static]incoming-value.incoming-value-consume-async: func</code></h4>
 <h5>Params</h5>
 <ul>
-<li><a name="static_incoming_value.incoming_value_consume_async.this"></a><code>this</code>: own&lt;<a href="#incoming_value"><a href="#incoming_value"><code>incoming-value</code></a></a>&gt;</li>
+<li><a name="static_incoming_value_incoming_value_consume_async.this"></a><code>this</code>: own&lt;<a href="#incoming_value"><a href="#incoming_value"><code>incoming-value</code></a></a>&gt;</li>
 </ul>
 <h5>Return values</h5>
 <ul>
-<li><a name="static_incoming_value.incoming_value_consume_async.0"></a> result&lt;own&lt;<a href="#incoming_value_async_body"><a href="#incoming_value_async_body"><code>incoming-value-async-body</code></a></a>&gt;, <a href="#error"><a href="#error"><code>error</code></a></a>&gt;</li>
+<li><a name="static_incoming_value_incoming_value_consume_async.0"></a> result&lt;own&lt;<a href="#incoming_value_async_body"><a href="#incoming_value_async_body"><code>incoming-value-async-body</code></a></a>&gt;, <a href="#error"><a href="#error"><code>error</code></a></a>&gt;</li>
 </ul>
-<h4><a name="method_incoming_value.size"></a><code>[method]incoming-value.size: func</code></h4>
+<h4><a name="method_incoming_value_size"></a><code>[method]incoming-value.size: func</code></h4>
 <h5>Params</h5>
 <ul>
-<li><a name="method_incoming_value.size.self"></a><code>self</code>: borrow&lt;<a href="#incoming_value"><a href="#incoming_value"><code>incoming-value</code></a></a>&gt;</li>
+<li><a name="method_incoming_value_size.self"></a><code>self</code>: borrow&lt;<a href="#incoming_value"><a href="#incoming_value"><code>incoming-value</code></a></a>&gt;</li>
 </ul>
 <h5>Return values</h5>
 <ul>
-<li><a name="method_incoming_value.size.0"></a> <code>u64</code></li>
+<li><a name="method_incoming_value_size.0"></a> <code>u64</code></li>
 </ul>
-<h2><a name="wasi:blobstore_container_0.2.0_draft"></a>Import interface wasi:blobstore/container@0.2.0-draft</h2>
-<p>a Container is a collection of objects</p>
+<h2><a name="wrpc_blobstore_types_0_1_0"></a>Import interface wrpc:blobstore/types@0.1.0</h2>
 <hr />
 <h3>Types</h3>
-<h4><a name="input_stream"></a><code>type input-stream</code></h4>
-<p><a href="#input_stream"><a href="#input_stream"><code>input-stream</code></a></a></p>
+<h4><a name="wasi_container_metadata"></a><code>type wasi-container-metadata</code></h4>
+<p><a href="#container_metadata"><a href="#container_metadata"><code>container-metadata</code></a></a></p>
 <p>
-#### <a name="output_stream"></a>`type output-stream`
-[`output-stream`](#output_stream)
+#### <a name="wasi_container_name"></a>`type wasi-container-name`
+[`container-name`](#container_name)
+<p>
+#### <a name="wasi_object_id"></a>`type wasi-object-id`
+[`object-id`](#object_id)
+<p>
+#### <a name="wasi_object_metadata"></a>`type wasi-object-metadata`
+[`object-metadata`](#object_metadata)
+<p>
+#### <a name="timestamp"></a>`type timestamp`
+[`timestamp`](#timestamp)
+<p>
+#### <a name="object_size"></a>`type object-size`
+[`object-size`](#object_size)
+<p>
+#### <a name="container_metadata"></a>`record container-metadata`
+<p>information about a container</p>
+<h5>Record Fields</h5>
+<ul>
+<li><a name="container_metadata.created_at"></a><code>created-at</code>: <a href="#timestamp"><a href="#timestamp"><code>timestamp</code></a></a><p>date and time container was created
+</li>
+</ul>
+<h4><a name="container_name"></a><code>type container-name</code></h4>
+<p><a href="#wasi_container_name"><a href="#wasi_container_name"><code>wasi-container-name</code></a></a></p>
+<p>
+#### <a name="object_id"></a>`type object-id`
+[`wasi-object-id`](#wasi_object_id)
+<p>
+#### <a name="object_metadata"></a>`record object-metadata`
+<p>information about an object</p>
+<h5>Record Fields</h5>
+<ul>
+<li>
+<p><a name="object_metadata.created_at"></a><code>created-at</code>: <a href="#timestamp"><a href="#timestamp"><code>timestamp</code></a></a></p>
+<p>date and time the object was created
+</li>
+<li>
+<p><a name="object_metadata.size"></a><code>size</code>: <a href="#object_size"><a href="#object_size"><code>object-size</code></a></a></p>
+<p>size of the object, in bytes
+</li>
+</ul>
+<h2><a name="wrpc_blobstore_blobstore_0_1_0"></a>Import interface wrpc:blobstore/blobstore@0.1.0</h2>
+<hr />
+<h3>Types</h3>
+<h4><a name="container_name"></a><code>type container-name</code></h4>
+<p><a href="#container_name"><a href="#container_name"><code>container-name</code></a></a></p>
 <p>
 #### <a name="container_metadata"></a>`type container-metadata`
 [`container-metadata`](#container_metadata)
 <p>
-#### <a name="error"></a>`type error`
-[`error`](#error)
-<p>
-#### <a name="incoming_value"></a>`type incoming-value`
-[`incoming-value`](#incoming_value)
-<p>
 #### <a name="object_metadata"></a>`type object-metadata`
 [`object-metadata`](#object_metadata)
-<p>
-#### <a name="object_name"></a>`type object-name`
-[`object-name`](#object_name)
-<p>
-#### <a name="outgoing_value"></a>`type outgoing-value`
-[`outgoing-value`](#outgoing_value)
-<p>
-#### <a name="container"></a>`resource container`
-<p>this defines the <a href="#container"><code>container</code></a> resource</p>
-<h4><a name="stream_object_names"></a><code>resource stream-object-names</code></h4>
-<h2>this defines the <a href="#stream_object_names"><code>stream-object-names</code></a> resource which is a representation of stream<object-name></h2>
-<h3>Functions</h3>
-<h4><a name="method_container.name"></a><code>[method]container.name: func</code></h4>
-<p>returns container name</p>
-<h5>Params</h5>
-<ul>
-<li><a name="method_container.name.self"></a><code>self</code>: borrow&lt;<a href="#container"><a href="#container"><code>container</code></a></a>&gt;</li>
-</ul>
-<h5>Return values</h5>
-<ul>
-<li><a name="method_container.name.0"></a> result&lt;<code>string</code>, <a href="#error"><a href="#error"><code>error</code></a></a>&gt;</li>
-</ul>
-<h4><a name="method_container.info"></a><code>[method]container.info: func</code></h4>
-<p>returns container metadata</p>
-<h5>Params</h5>
-<ul>
-<li><a name="method_container.info.self"></a><code>self</code>: borrow&lt;<a href="#container"><a href="#container"><code>container</code></a></a>&gt;</li>
-</ul>
-<h5>Return values</h5>
-<ul>
-<li><a name="method_container.info.0"></a> result&lt;<a href="#container_metadata"><a href="#container_metadata"><code>container-metadata</code></a></a>, <a href="#error"><a href="#error"><code>error</code></a></a>&gt;</li>
-</ul>
-<h4><a name="method_container.get_data"></a><code>[method]container.get-data: func</code></h4>
-<p>retrieves an object or portion of an object, as a resource.
-Start and end offsets are inclusive.
-Once a data-blob resource has been created, the underlying bytes are held by the blobstore service for the lifetime
-of the data-blob resource, even if the object they came from is later deleted.</p>
-<h5>Params</h5>
-<ul>
-<li><a name="method_container.get_data.self"></a><code>self</code>: borrow&lt;<a href="#container"><a href="#container"><code>container</code></a></a>&gt;</li>
-<li><a name="method_container.get_data.name"></a><code>name</code>: <a href="#object_name"><a href="#object_name"><code>object-name</code></a></a></li>
-<li><a name="method_container.get_data.start"></a><code>start</code>: <code>u64</code></li>
-<li><a name="method_container.get_data.end"></a><code>end</code>: <code>u64</code></li>
-</ul>
-<h5>Return values</h5>
-<ul>
-<li><a name="method_container.get_data.0"></a> result&lt;own&lt;<a href="#incoming_value"><a href="#incoming_value"><code>incoming-value</code></a></a>&gt;, <a href="#error"><a href="#error"><code>error</code></a></a>&gt;</li>
-</ul>
-<h4><a name="method_container.write_data"></a><code>[method]container.write-data: func</code></h4>
-<p>creates or replaces an object with the data blob.</p>
-<h5>Params</h5>
-<ul>
-<li><a name="method_container.write_data.self"></a><code>self</code>: borrow&lt;<a href="#container"><a href="#container"><code>container</code></a></a>&gt;</li>
-<li><a name="method_container.write_data.name"></a><code>name</code>: <a href="#object_name"><a href="#object_name"><code>object-name</code></a></a></li>
-<li><a name="method_container.write_data.data"></a><code>data</code>: borrow&lt;<a href="#outgoing_value"><a href="#outgoing_value"><code>outgoing-value</code></a></a>&gt;</li>
-</ul>
-<h5>Return values</h5>
-<ul>
-<li><a name="method_container.write_data.0"></a> result&lt;_, <a href="#error"><a href="#error"><code>error</code></a></a>&gt;</li>
-</ul>
-<h4><a name="method_container.list_objects"></a><code>[method]container.list-objects: func</code></h4>
-<p>returns list of objects in the container. Order is undefined.</p>
-<h5>Params</h5>
-<ul>
-<li><a name="method_container.list_objects.self"></a><code>self</code>: borrow&lt;<a href="#container"><a href="#container"><code>container</code></a></a>&gt;</li>
-</ul>
-<h5>Return values</h5>
-<ul>
-<li><a name="method_container.list_objects.0"></a> result&lt;own&lt;<a href="#stream_object_names"><a href="#stream_object_names"><code>stream-object-names</code></a></a>&gt;, <a href="#error"><a href="#error"><code>error</code></a></a>&gt;</li>
-</ul>
-<h4><a name="method_container.delete_object"></a><code>[method]container.delete-object: func</code></h4>
-<p>deletes object.
-does not return error if object did not exist.</p>
-<h5>Params</h5>
-<ul>
-<li><a name="method_container.delete_object.self"></a><code>self</code>: borrow&lt;<a href="#container"><a href="#container"><code>container</code></a></a>&gt;</li>
-<li><a name="method_container.delete_object.name"></a><code>name</code>: <a href="#object_name"><a href="#object_name"><code>object-name</code></a></a></li>
-</ul>
-<h5>Return values</h5>
-<ul>
-<li><a name="method_container.delete_object.0"></a> result&lt;_, <a href="#error"><a href="#error"><code>error</code></a></a>&gt;</li>
-</ul>
-<h4><a name="method_container.delete_objects"></a><code>[method]container.delete-objects: func</code></h4>
-<p>deletes multiple objects in the container</p>
-<h5>Params</h5>
-<ul>
-<li><a name="method_container.delete_objects.self"></a><code>self</code>: borrow&lt;<a href="#container"><a href="#container"><code>container</code></a></a>&gt;</li>
-<li><a name="method_container.delete_objects.names"></a><code>names</code>: list&lt;<a href="#object_name"><a href="#object_name"><code>object-name</code></a></a>&gt;</li>
-</ul>
-<h5>Return values</h5>
-<ul>
-<li><a name="method_container.delete_objects.0"></a> result&lt;_, <a href="#error"><a href="#error"><code>error</code></a></a>&gt;</li>
-</ul>
-<h4><a name="method_container.has_object"></a><code>[method]container.has-object: func</code></h4>
-<p>returns true if the object exists in this container</p>
-<h5>Params</h5>
-<ul>
-<li><a name="method_container.has_object.self"></a><code>self</code>: borrow&lt;<a href="#container"><a href="#container"><code>container</code></a></a>&gt;</li>
-<li><a name="method_container.has_object.name"></a><code>name</code>: <a href="#object_name"><a href="#object_name"><code>object-name</code></a></a></li>
-</ul>
-<h5>Return values</h5>
-<ul>
-<li><a name="method_container.has_object.0"></a> result&lt;<code>bool</code>, <a href="#error"><a href="#error"><code>error</code></a></a>&gt;</li>
-</ul>
-<h4><a name="method_container.object_info"></a><code>[method]container.object-info: func</code></h4>
-<p>returns metadata for the object</p>
-<h5>Params</h5>
-<ul>
-<li><a name="method_container.object_info.self"></a><code>self</code>: borrow&lt;<a href="#container"><a href="#container"><code>container</code></a></a>&gt;</li>
-<li><a name="method_container.object_info.name"></a><code>name</code>: <a href="#object_name"><a href="#object_name"><code>object-name</code></a></a></li>
-</ul>
-<h5>Return values</h5>
-<ul>
-<li><a name="method_container.object_info.0"></a> result&lt;<a href="#object_metadata"><a href="#object_metadata"><code>object-metadata</code></a></a>, <a href="#error"><a href="#error"><code>error</code></a></a>&gt;</li>
-</ul>
-<h4><a name="method_container.clear"></a><code>[method]container.clear: func</code></h4>
-<p>removes all objects within the container, leaving the container empty.</p>
-<h5>Params</h5>
-<ul>
-<li><a name="method_container.clear.self"></a><code>self</code>: borrow&lt;<a href="#container"><a href="#container"><code>container</code></a></a>&gt;</li>
-</ul>
-<h5>Return values</h5>
-<ul>
-<li><a name="method_container.clear.0"></a> result&lt;_, <a href="#error"><a href="#error"><code>error</code></a></a>&gt;</li>
-</ul>
-<h4><a name="method_stream_object_names.read_stream_object_names"></a><code>[method]stream-object-names.read-stream-object-names: func</code></h4>
-<p>reads the next number of objects from the stream</p>
-<p>This function returns the list of objects read, and a boolean indicating if the end of the stream was reached.</p>
-<h5>Params</h5>
-<ul>
-<li><a name="method_stream_object_names.read_stream_object_names.self"></a><code>self</code>: borrow&lt;<a href="#stream_object_names"><a href="#stream_object_names"><code>stream-object-names</code></a></a>&gt;</li>
-<li><a name="method_stream_object_names.read_stream_object_names.len"></a><code>len</code>: <code>u64</code></li>
-</ul>
-<h5>Return values</h5>
-<ul>
-<li><a name="method_stream_object_names.read_stream_object_names.0"></a> result&lt;(list&lt;<a href="#object_name"><a href="#object_name"><code>object-name</code></a></a>&gt;, <code>bool</code>), <a href="#error"><a href="#error"><code>error</code></a></a>&gt;</li>
-</ul>
-<h4><a name="method_stream_object_names.skip_stream_object_names"></a><code>[method]stream-object-names.skip-stream-object-names: func</code></h4>
-<p>skip the next number of objects in the stream</p>
-<p>This function returns the number of objects skipped, and a boolean indicating if the end of the stream was reached.</p>
-<h5>Params</h5>
-<ul>
-<li><a name="method_stream_object_names.skip_stream_object_names.self"></a><code>self</code>: borrow&lt;<a href="#stream_object_names"><a href="#stream_object_names"><code>stream-object-names</code></a></a>&gt;</li>
-<li><a name="method_stream_object_names.skip_stream_object_names.num"></a><code>num</code>: <code>u64</code></li>
-</ul>
-<h5>Return values</h5>
-<ul>
-<li><a name="method_stream_object_names.skip_stream_object_names.0"></a> result&lt;(<code>u64</code>, <code>bool</code>), <a href="#error"><a href="#error"><code>error</code></a></a>&gt;</li>
-</ul>
-<h2><a name="wasi:blobstore_blobstore_0.2.0_draft"></a>Import interface wasi:blobstore/blobstore@0.2.0-draft</h2>
-<p>wasi-cloud Blobstore service definition</p>
-<hr />
-<h3>Types</h3>
-<h4><a name="container"></a><code>type container</code></h4>
-<p><a href="#container"><a href="#container"><code>container</code></a></a></p>
-<p>
-#### <a name="error"></a>`type error`
-[`error`](#error)
-<p>
-#### <a name="container_name"></a>`type container-name`
-[`container-name`](#container_name)
 <p>
 #### <a name="object_id"></a>`type object-id`
 [`object-id`](#object_id)
 <p>
 ----
 <h3>Functions</h3>
-<h4><a name="create_container"></a><code>create-container: func</code></h4>
-<p>creates a new empty container</p>
+<h4><a name="clear_container"></a><code>clear-container: func</code></h4>
 <h5>Params</h5>
 <ul>
-<li><a name="create_container.name"></a><code>name</code>: <a href="#container_name"><a href="#container_name"><code>container-name</code></a></a></li>
+<li><a name="clear_container.name"></a><code>name</code>: <code>string</code></li>
 </ul>
 <h5>Return values</h5>
 <ul>
-<li><a name="create_container.0"></a> result&lt;own&lt;<a href="#container"><a href="#container"><code>container</code></a></a>&gt;, <a href="#error"><a href="#error"><code>error</code></a></a>&gt;</li>
-</ul>
-<h4><a name="get_container"></a><code>get-container: func</code></h4>
-<p>retrieves a container by name</p>
-<h5>Params</h5>
-<ul>
-<li><a name="get_container.name"></a><code>name</code>: <a href="#container_name"><a href="#container_name"><code>container-name</code></a></a></li>
-</ul>
-<h5>Return values</h5>
-<ul>
-<li><a name="get_container.0"></a> result&lt;own&lt;<a href="#container"><a href="#container"><code>container</code></a></a>&gt;, <a href="#error"><a href="#error"><code>error</code></a></a>&gt;</li>
-</ul>
-<h4><a name="delete_container"></a><code>delete-container: func</code></h4>
-<p>deletes a container and all objects within it</p>
-<h5>Params</h5>
-<ul>
-<li><a name="delete_container.name"></a><code>name</code>: <a href="#container_name"><a href="#container_name"><code>container-name</code></a></a></li>
-</ul>
-<h5>Return values</h5>
-<ul>
-<li><a name="delete_container.0"></a> result&lt;_, <a href="#error"><a href="#error"><code>error</code></a></a>&gt;</li>
+<li><a name="clear_container.0"></a> result&lt;_, <code>string</code>&gt;</li>
 </ul>
 <h4><a name="container_exists"></a><code>container-exists: func</code></h4>
-<p>returns true if the container exists</p>
 <h5>Params</h5>
 <ul>
-<li><a name="container_exists.name"></a><code>name</code>: <a href="#container_name"><a href="#container_name"><code>container-name</code></a></a></li>
+<li><a name="container_exists.name"></a><code>name</code>: <code>string</code></li>
 </ul>
 <h5>Return values</h5>
 <ul>
-<li><a name="container_exists.0"></a> result&lt;<code>bool</code>, <a href="#error"><a href="#error"><code>error</code></a></a>&gt;</li>
+<li><a name="container_exists.0"></a> result&lt;<code>bool</code>, <code>string</code>&gt;</li>
+</ul>
+<h4><a name="create_container"></a><code>create-container: func</code></h4>
+<h5>Params</h5>
+<ul>
+<li><a name="create_container.name"></a><code>name</code>: <code>string</code></li>
+</ul>
+<h5>Return values</h5>
+<ul>
+<li><a name="create_container.0"></a> result&lt;_, <code>string</code>&gt;</li>
+</ul>
+<h4><a name="delete_container"></a><code>delete-container: func</code></h4>
+<h5>Params</h5>
+<ul>
+<li><a name="delete_container.name"></a><code>name</code>: <code>string</code></li>
+</ul>
+<h5>Return values</h5>
+<ul>
+<li><a name="delete_container.0"></a> result&lt;_, <code>string</code>&gt;</li>
+</ul>
+<h4><a name="get_container_info"></a><code>get-container-info: func</code></h4>
+<h5>Params</h5>
+<ul>
+<li><a name="get_container_info.name"></a><code>name</code>: <code>string</code></li>
+</ul>
+<h5>Return values</h5>
+<ul>
+<li><a name="get_container_info.0"></a> result&lt;<a href="#container_metadata"><a href="#container_metadata"><code>container-metadata</code></a></a>, <code>string</code>&gt;</li>
+</ul>
+<h4><a name="list_container_objects"></a><code>list-container-objects: func</code></h4>
+<h5>Params</h5>
+<ul>
+<li><a name="list_container_objects.name"></a><code>name</code>: <code>string</code></li>
+<li><a name="list_container_objects.limit"></a><code>limit</code>: option&lt;<code>u64</code>&gt;</li>
+<li><a name="list_container_objects.offset"></a><code>offset</code>: option&lt;<code>u64</code>&gt;</li>
+</ul>
+<h5>Return values</h5>
+<ul>
+<li><a name="list_container_objects.0"></a> result&lt;stream&lt;<code>string</code>&gt;, <code>string</code>&gt;</li>
 </ul>
 <h4><a name="copy_object"></a><code>copy-object: func</code></h4>
-<p>copies (duplicates) an object, to the same or a different container.
-returns an error if the target container does not exist.
-overwrites destination object if it already existed.</p>
 <h5>Params</h5>
 <ul>
 <li><a name="copy_object.src"></a><code>src</code>: <a href="#object_id"><a href="#object_id"><code>object-id</code></a></a></li>
@@ -795,12 +684,57 @@ overwrites destination object if it already existed.</p>
 </ul>
 <h5>Return values</h5>
 <ul>
-<li><a name="copy_object.0"></a> result&lt;_, <a href="#error"><a href="#error"><code>error</code></a></a>&gt;</li>
+<li><a name="copy_object.0"></a> result&lt;_, <code>string</code>&gt;</li>
+</ul>
+<h4><a name="delete_object"></a><code>delete-object: func</code></h4>
+<h5>Params</h5>
+<ul>
+<li><a name="delete_object.id"></a><code>id</code>: <a href="#object_id"><a href="#object_id"><code>object-id</code></a></a></li>
+</ul>
+<h5>Return values</h5>
+<ul>
+<li><a name="delete_object.0"></a> result&lt;_, <code>string</code>&gt;</li>
+</ul>
+<h4><a name="delete_objects"></a><code>delete-objects: func</code></h4>
+<h5>Params</h5>
+<ul>
+<li><a name="delete_objects.container"></a><code>container</code>: <code>string</code></li>
+<li><a name="delete_objects.objects"></a><code>objects</code>: list&lt;<code>string</code>&gt;</li>
+</ul>
+<h5>Return values</h5>
+<ul>
+<li><a name="delete_objects.0"></a> result&lt;_, <code>string</code>&gt;</li>
+</ul>
+<h4><a name="get_container_data"></a><code>get-container-data: func</code></h4>
+<h5>Params</h5>
+<ul>
+<li><a name="get_container_data.id"></a><code>id</code>: <a href="#object_id"><a href="#object_id"><code>object-id</code></a></a></li>
+<li><a name="get_container_data.start"></a><code>start</code>: <code>u64</code></li>
+<li><a name="get_container_data.end"></a><code>end</code>: <code>u64</code></li>
+</ul>
+<h5>Return values</h5>
+<ul>
+<li><a name="get_container_data.0"></a> result&lt;stream&lt;<code>u8</code>&gt;, <code>string</code>&gt;</li>
+</ul>
+<h4><a name="get_object_info"></a><code>get-object-info: func</code></h4>
+<h5>Params</h5>
+<ul>
+<li><a name="get_object_info.id"></a><code>id</code>: <a href="#object_id"><a href="#object_id"><code>object-id</code></a></a></li>
+</ul>
+<h5>Return values</h5>
+<ul>
+<li><a name="get_object_info.0"></a> result&lt;<a href="#object_metadata"><a href="#object_metadata"><code>object-metadata</code></a></a>, <code>string</code>&gt;</li>
+</ul>
+<h4><a name="has_object"></a><code>has-object: func</code></h4>
+<h5>Params</h5>
+<ul>
+<li><a name="has_object.id"></a><code>id</code>: <a href="#object_id"><a href="#object_id"><code>object-id</code></a></a></li>
+</ul>
+<h5>Return values</h5>
+<ul>
+<li><a name="has_object.0"></a> result&lt;<code>bool</code>, <code>string</code>&gt;</li>
 </ul>
 <h4><a name="move_object"></a><code>move-object: func</code></h4>
-<p>moves or renames an object, to the same or a different container
-returns an error if the destination container does not exist.
-overwrites destination object if it already existed.</p>
 <h5>Params</h5>
 <ul>
 <li><a name="move_object.src"></a><code>src</code>: <a href="#object_id"><a href="#object_id"><code>object-id</code></a></a></li>
@@ -808,5 +742,15 @@ overwrites destination object if it already existed.</p>
 </ul>
 <h5>Return values</h5>
 <ul>
-<li><a name="move_object.0"></a> result&lt;_, <a href="#error"><a href="#error"><code>error</code></a></a>&gt;</li>
+<li><a name="move_object.0"></a> result&lt;_, <code>string</code>&gt;</li>
+</ul>
+<h4><a name="write_container_data"></a><code>write-container-data: func</code></h4>
+<h5>Params</h5>
+<ul>
+<li><a name="write_container_data.id"></a><code>id</code>: <a href="#object_id"><a href="#object_id"><code>object-id</code></a></a></li>
+<li><a name="write_container_data.data"></a><code>data</code>: stream&lt;<code>u8</code>&gt;</li>
+</ul>
+<h5>Return values</h5>
+<ul>
+<li><a name="write_container_data.0"></a> result&lt;_, <code>string</code>&gt;</li>
 </ul>

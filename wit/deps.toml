@@ -1,1 +1,1 @@
-io = "https://github.com/WebAssembly/wasi-io/archive/v0.2.0.tar.gz"
+blobstore = "https://github.com/WebAssembly/wasi-blobstore/archive/main.tar.gz"
