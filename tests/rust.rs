@@ -1,808 +1,365 @@
-use core::pin::pin;
+use core::pin::Pin;
+use core::time::Duration;
 
 use std::sync::Arc;
 
 use anyhow::Context;
 use bytes::Bytes;
-use futures::{stream, TryStreamExt as _};
-use tokio::try_join;
+use futures::{stream, Stream, StreamExt as _};
+use tokio::sync::Notify;
+use tokio::time::sleep;
 use tracing::info;
-use wrpc_interface_blobstore::{ContainerMetadata, ObjectId, ObjectMetadata};
-use wrpc_transport::{AcceptedInvocation, Transmitter as _, Value};
+use wrpc_interface_blobstore::bindings::wrpc::blobstore::types::{
+    ContainerMetadata, ObjectId, ObjectMetadata,
+};
 
 mod common;
-use common::{init, start_nats};
+use common::start_nats;
 
-#[tokio::test(flavor = "multi_thread")]
+#[derive(Clone)]
+struct Handler;
+
+impl<Ctx> wrpc_interface_blobstore::bindings::exports::wrpc::blobstore::blobstore::Handler<Ctx>
+    for Handler
+{
+    async fn clear_container(&self, _cx: Ctx, name: String) -> anyhow::Result<Result<(), String>> {
+        assert_eq!(name, "test");
+        Ok(Ok(()))
+    }
+
+    async fn container_exists(
+        &self,
+        _cx: Ctx,
+        name: String,
+    ) -> anyhow::Result<Result<bool, String>> {
+        assert_eq!(name, "test");
+        Ok(Ok(true))
+    }
+
+    async fn create_container(&self, _cx: Ctx, name: String) -> anyhow::Result<Result<(), String>> {
+        assert_eq!(name, "test");
+        Ok(Ok(()))
+    }
+
+    async fn delete_container(&self, _cx: Ctx, name: String) -> anyhow::Result<Result<(), String>> {
+        assert_eq!(name, "test");
+        Ok(Ok(()))
+    }
+
+    async fn get_container_info(
+        &self,
+        _cx: Ctx,
+        name: String,
+    ) -> anyhow::Result<Result<ContainerMetadata, String>> {
+        assert_eq!(name, "test");
+        Ok(Ok(ContainerMetadata { created_at: 42 }))
+    }
+
+    async fn list_container_objects(
+        &self,
+        _cx: Ctx,
+        name: String,
+        limit: Option<u64>,
+        offset: Option<u64>,
+    ) -> anyhow::Result<Result<Pin<Box<dyn Stream<Item = Vec<String>> + Send>>, String>> {
+        assert_eq!(name, "test");
+        assert_eq!(limit, Some(100));
+        assert_eq!(offset, None);
+        Ok(Ok(Box::pin(stream::iter([
+            vec!["first".to_string()],
+            vec!["second".to_string()],
+        ]))))
+    }
+
+    async fn copy_object(
+        &self,
+        _cx: Ctx,
+        src: ObjectId,
+        dest: ObjectId,
+    ) -> anyhow::Result<Result<(), String>> {
+        assert_eq!(src.container, "container");
+        assert_eq!(src.object, "object");
+        assert_eq!(dest.container, "new-container");
+        assert_eq!(dest.object, "new-object");
+        Ok(Ok(()))
+    }
+
+    async fn delete_object(&self, _cx: Ctx, id: ObjectId) -> anyhow::Result<Result<(), String>> {
+        assert_eq!(id.container, "container");
+        assert_eq!(id.object, "object");
+        Ok(Ok(()))
+    }
+
+    async fn delete_objects(
+        &self,
+        _cx: Ctx,
+        container: String,
+        objects: Vec<String>,
+    ) -> anyhow::Result<Result<(), String>> {
+        assert_eq!(container, "container".to_string());
+        assert_eq!(objects, ["object".to_string(), "new-object".to_string()]);
+        Ok(Ok(()))
+    }
+
+    async fn get_container_data(
+        &self,
+        _cx: Ctx,
+        id: ObjectId,
+        start: u64,
+        end: u64,
+    ) -> anyhow::Result<Result<Pin<Box<dyn Stream<Item = Bytes> + Send>>, String>> {
+        assert_eq!(id.container, "container");
+        assert_eq!(id.object, "object");
+        assert_eq!(start, 42);
+        assert_eq!(end, 4242);
+        Ok(Ok(Box::pin(stream::iter([
+            Bytes::from("foo"),
+            Bytes::from("bar"),
+        ]))))
+    }
+
+    async fn get_object_info(
+        &self,
+        _cx: Ctx,
+        id: ObjectId,
+    ) -> anyhow::Result<Result<ObjectMetadata, String>> {
+        assert_eq!(id.container, "container");
+        assert_eq!(id.object, "object");
+        Ok(Ok(ObjectMetadata {
+            created_at: 42,
+            size: 4242,
+        }))
+    }
+
+    async fn has_object(&self, _cx: Ctx, id: ObjectId) -> anyhow::Result<Result<bool, String>> {
+        assert_eq!(id.container, "container");
+        assert_eq!(id.object, "object");
+        Ok(Ok(true))
+    }
+
+    async fn move_object(
+        &self,
+        _cx: Ctx,
+        src: ObjectId,
+        dest: ObjectId,
+    ) -> anyhow::Result<Result<(), String>> {
+        assert_eq!(src.container, "container");
+        assert_eq!(src.object, "object");
+        assert_eq!(dest.container, "new-container");
+        assert_eq!(dest.object, "new-object");
+        Ok(Ok(()))
+    }
+
+    async fn write_container_data(
+        &self,
+        _cx: Ctx,
+        id: ObjectId,
+        data: Pin<Box<dyn Stream<Item = Bytes> + Send>>,
+    ) -> anyhow::Result<Result<(), String>> {
+        assert_eq!(id.container, "container");
+        assert_eq!(id.object, "object");
+        assert_eq!(data.collect::<Vec<Bytes>>().await.concat(), b"foobar");
+        Ok(Ok(()))
+    }
+}
+
+#[test_log::test(tokio::test(flavor = "multi_thread"))]
 async fn rust() -> anyhow::Result<()> {
-    init().await;
-
     let (_port, nats_client, nats_server, stop_tx) = start_nats().await?;
 
-    let client = wrpc_transport_nats::Client::new(nats_client, "test-prefix".to_string());
+    let client = wrpc_transport_nats::Client::new(nats_client, "test-prefix".to_string(), None);
     let client = Arc::new(client);
 
-    {
-        use wrpc_interface_blobstore::Blobstore;
+    let shutdown = Arc::new(Notify::new());
 
-        let invocations = client
-            .serve_clear_container()
+    info!("serving blobstore");
+    let server = tokio::spawn({
+        let client = Arc::clone(&client);
+        let shutdown = Arc::clone(&shutdown);
+        async move {
+            wrpc_interface_blobstore::bindings::exports::wrpc::blobstore::blobstore::serve_interface(
+                client.as_ref(),
+                Handler,
+                shutdown.notified(),
+            )
             .await
-            .context("failed to serve `clear-container`")?;
-        let mut invocations = pin!(invocations);
-        try_join!(
-            async {
-                let AcceptedInvocation {
-                    params: name,
-                    result_subject,
-                    transmitter,
-                    ..
-                } = invocations
-                    .try_next()
-                    .await
-                    .context("failed to receive invocation")?
-                    .context("unexpected end of stream")?;
-                assert_eq!(name, "test");
-                info!("transmit response");
-                transmitter
-                    .transmit_static(result_subject, Ok::<_, String>(()))
-                    .await
-                    .context("failed to transmit response")?;
-                info!("response transmitted");
-                anyhow::Ok(())
-            },
-            async {
-                info!("invoke function");
-                let (res, tx) = client
-                    .invoke_clear_container("test")
-                    .await
-                    .context("failed to invoke")?;
-                let () = res.expect("invocation failed");
-                info!("transmit async parameters");
-                tx.await.context("failed to transmit parameters")?;
-                info!("async parameters transmitted");
-                Ok(())
-            }
-        )?;
+            .context("failed to serve blobstore")
+        }
+    });
 
-        try_join!(
-            async {
-                let AcceptedInvocation {
-                    params: name,
-                    result_subject,
-                    transmitter,
-                    ..
-                } = invocations
-                    .try_next()
-                    .await
-                    .context("failed to receive invocation")?
-                    .context("unexpected end of stream")?;
-                assert_eq!(name, "test");
-                info!("transmit response");
-                transmitter
-                    .transmit_static(result_subject, Err::<(), _>("test"))
-                    .await
-                    .context("failed to transmit response")?;
-                info!("response transmitted");
-                anyhow::Ok(())
-            },
-            async {
-                info!("invoke function");
-                let (res, tx) = client
-                    .invoke_clear_container("test")
-                    .await
-                    .context("failed to invoke")?;
-                let err = res.expect_err("invocation should have failed");
-                assert_eq!(err, "test");
-                info!("transmit async parameters");
-                tx.await.context("failed to transmit parameters")?;
-                info!("async parameters transmitted");
-                Ok(())
-            }
-        )?;
+    // wait for the server to start
+    sleep(Duration::from_millis(300)).await;
+
+    let res = wrpc_interface_blobstore::bindings::wrpc::blobstore::blobstore::clear_container(
+        client.as_ref(),
+        None,
+        "test",
+    )
+    .await?;
+    assert_eq!(res, Ok(()));
+
+    let res = wrpc_interface_blobstore::bindings::wrpc::blobstore::blobstore::container_exists(
+        client.as_ref(),
+        None,
+        "test",
+    )
+    .await?;
+    assert_eq!(res, Ok(true));
+
+    let res = wrpc_interface_blobstore::bindings::wrpc::blobstore::blobstore::create_container(
+        client.as_ref(),
+        None,
+        "test",
+    )
+    .await?;
+    assert_eq!(res, Ok(()));
+
+    let res = wrpc_interface_blobstore::bindings::wrpc::blobstore::blobstore::delete_container(
+        client.as_ref(),
+        None,
+        "test",
+    )
+    .await?;
+    assert_eq!(res, Ok(()));
+
+    let res = wrpc_interface_blobstore::bindings::wrpc::blobstore::blobstore::get_container_info(
+        client.as_ref(),
+        None,
+        "test",
+    )
+    .await?;
+    assert!(matches!(res, Ok(ContainerMetadata { created_at: 42 })));
+
+    let (res, io) =
+        wrpc_interface_blobstore::bindings::wrpc::blobstore::blobstore::list_container_objects(
+            client.as_ref(),
+            None,
+            "test",
+            Some(100),
+            None,
+        )
+        .await?;
+    if let Some(io) = io {
+        io.await.expect("failed to complete async I/O");
     }
+    assert_eq!(
+        res.unwrap().collect::<Vec<_>>().await.concat(),
+        ["first", "second"]
+    );
 
-    {
-        use wrpc_interface_blobstore::Blobstore;
+    let res = wrpc_interface_blobstore::bindings::wrpc::blobstore::blobstore::copy_object(
+        client.as_ref(),
+        None,
+        &ObjectId {
+            container: "container".to_string(),
+            object: "object".to_string(),
+        },
+        &ObjectId {
+            container: "new-container".to_string(),
+            object: "new-object".to_string(),
+        },
+    )
+    .await?;
+    assert_eq!(res, Ok(()));
 
-        let invocations = client
-            .serve_container_exists()
-            .await
-            .context("failed to serve `container-exists`")?;
-        try_join!(
-            async {
-                let AcceptedInvocation {
-                    params: name,
-                    result_subject,
-                    transmitter,
-                    ..
-                } = pin!(invocations)
-                    .try_next()
-                    .await
-                    .context("failed to receive invocation")?
-                    .context("unexpected end of stream")?;
-                assert_eq!(name, "test");
-                info!("transmit response");
-                transmitter
-                    .transmit_static(result_subject, Ok::<_, String>(true))
-                    .await
-                    .context("failed to transmit response")?;
-                info!("response transmitted");
-                anyhow::Ok(())
+    let res = wrpc_interface_blobstore::bindings::wrpc::blobstore::blobstore::delete_object(
+        client.as_ref(),
+        None,
+        &ObjectId {
+            container: "container".to_string(),
+            object: "object".to_string(),
+        },
+    )
+    .await?;
+    assert_eq!(res, Ok(()));
+
+    let res = wrpc_interface_blobstore::bindings::wrpc::blobstore::blobstore::delete_objects(
+        client.as_ref(),
+        None,
+        "container",
+        &["object", "new-object"],
+    )
+    .await?;
+    assert_eq!(res, Ok(()));
+
+    let (res, io) =
+        wrpc_interface_blobstore::bindings::wrpc::blobstore::blobstore::get_container_data(
+            client.as_ref(),
+            None,
+            &ObjectId {
+                container: "container".to_string(),
+                object: "object".to_string(),
             },
-            async {
-                info!("invoke function");
-                let (res, tx) = client
-                    .invoke_container_exists("test")
-                    .await
-                    .context("failed to invoke")?;
-                let exists = res.expect("invocation failed");
-                assert!(exists);
-                info!("transmit async parameters");
-                tx.await.context("failed to transmit parameters")?;
-                info!("async parameters transmitted");
-                Ok(())
-            }
-        )?;
+            42,
+            4242,
+        )
+        .await?;
+    if let Some(io) = io {
+        io.await.expect("failed to complete async I/O");
     }
-    {
-        use wrpc_interface_blobstore::Blobstore;
+    assert_eq!(res.unwrap().collect::<Vec<_>>().await.concat(), b"foobar");
 
-        let invocations = client
-            .serve_create_container()
-            .await
-            .context("failed to serve `create-container`")?;
-        try_join!(
-            async {
-                let AcceptedInvocation {
-                    params: name,
-                    result_subject,
-                    transmitter,
-                    ..
-                } = pin!(invocations)
-                    .try_next()
-                    .await
-                    .context("failed to receive invocation")?
-                    .context("unexpected end of stream")?;
-                assert_eq!(name, "test");
-                info!("transmit response");
-                transmitter
-                    .transmit_static(result_subject, Ok::<_, String>(()))
-                    .await
-                    .context("failed to transmit response")?;
-                info!("response transmitted");
-                anyhow::Ok(())
-            },
-            async {
-                info!("invoke function");
-                let (res, tx) = client
-                    .invoke_create_container("test")
-                    .await
-                    .context("failed to invoke")?;
-                let () = res.expect("invocation failed");
-                info!("transmit async parameters");
-                tx.await.context("failed to transmit parameters")?;
-                info!("async parameters transmitted");
-                Ok(())
-            }
-        )?;
-    }
-    {
-        use wrpc_interface_blobstore::Blobstore;
+    let res = wrpc_interface_blobstore::bindings::wrpc::blobstore::blobstore::get_object_info(
+        client.as_ref(),
+        None,
+        &ObjectId {
+            container: "container".to_string(),
+            object: "object".to_string(),
+        },
+    )
+    .await?;
+    assert!(matches!(
+        res,
+        Ok(ObjectMetadata {
+            created_at: 42,
+            size: 4242
+        })
+    ));
 
-        let invocations = client
-            .serve_delete_container()
-            .await
-            .context("failed to serve `delete-container`")?;
-        try_join!(
-            async {
-                let AcceptedInvocation {
-                    params: name,
-                    result_subject,
-                    transmitter,
-                    ..
-                } = pin!(invocations)
-                    .try_next()
-                    .await
-                    .context("failed to receive invocation")?
-                    .context("unexpected end of stream")?;
-                assert_eq!(name, "test");
-                info!("transmit response");
-                transmitter
-                    .transmit_static(result_subject, Ok::<_, String>(()))
-                    .await
-                    .context("failed to transmit response")?;
-                info!("response transmitted");
-                anyhow::Ok(())
-            },
-            async {
-                info!("invoke function");
-                let (res, tx) = client
-                    .invoke_delete_container("test")
-                    .await
-                    .context("failed to invoke")?;
-                let () = res.expect("invocation failed");
-                info!("transmit async parameters");
-                tx.await.context("failed to transmit parameters")?;
-                info!("async parameters transmitted");
-                Ok(())
-            }
-        )?;
-    }
-    {
-        use wrpc_interface_blobstore::Blobstore;
+    let res = wrpc_interface_blobstore::bindings::wrpc::blobstore::blobstore::has_object(
+        client.as_ref(),
+        None,
+        &ObjectId {
+            container: "container".to_string(),
+            object: "object".to_string(),
+        },
+    )
+    .await?;
+    assert_eq!(res, Ok(true));
 
-        let invocations = client
-            .serve_get_container_info()
-            .await
-            .context("failed to serve `get-container-info`")?;
-        try_join!(
-            async {
-                let AcceptedInvocation {
-                    params: name,
-                    result_subject,
-                    transmitter,
-                    ..
-                } = pin!(invocations)
-                    .try_next()
-                    .await
-                    .context("failed to receive invocation")?
-                    .context("unexpected end of stream")?;
-                assert_eq!(name, "test");
-                info!("transmit response");
-                transmitter
-                    .transmit_static(
-                        result_subject,
-                        Ok::<_, String>(ContainerMetadata { created_at: 42 }),
-                    )
-                    .await
-                    .context("failed to transmit response")?;
-                info!("response transmitted");
-                anyhow::Ok(())
-            },
-            async {
-                info!("invoke function");
-                let (res, tx) = client
-                    .invoke_get_container_info("test")
-                    .await
-                    .context("failed to invoke")?;
-                let ContainerMetadata { created_at } = res.expect("invocation failed");
-                assert_eq!(created_at, 42);
-                info!("transmit async parameters");
-                tx.await.context("failed to transmit parameters")?;
-                info!("async parameters transmitted");
-                Ok(())
-            }
-        )?;
-    }
-    {
-        use wrpc_interface_blobstore::Blobstore;
+    let res = wrpc_interface_blobstore::bindings::wrpc::blobstore::blobstore::move_object(
+        client.as_ref(),
+        None,
+        &ObjectId {
+            container: "container".to_string(),
+            object: "object".to_string(),
+        },
+        &ObjectId {
+            container: "new-container".to_string(),
+            object: "new-object".to_string(),
+        },
+    )
+    .await?;
+    assert_eq!(res, Ok(()));
 
-        let invocations = client
-            .serve_list_container_objects()
-            .await
-            .context("failed to serve `list-container-objects`")?;
-        try_join!(
-            async {
-                let AcceptedInvocation {
-                    params: (name, limit, offset),
-                    result_subject,
-                    transmitter,
-                    ..
-                } = pin!(invocations)
-                    .try_next()
-                    .await
-                    .context("failed to receive invocation")?
-                    .context("unexpected end of stream")?;
-                assert_eq!(name, "test");
-                assert_eq!(limit, Some(100));
-                assert_eq!(offset, None);
-                info!("transmit response");
-                transmitter
-                    .transmit_static(
-                        result_subject,
-                        Ok::<_, String>(Value::Stream(Box::pin(stream::iter([Ok(vec![
-                            Some("first".to_string().into()),
-                            Some("second".to_string().into()),
-                        ])])))),
-                    )
-                    .await
-                    .context("failed to transmit response")?;
-                info!("response transmitted");
-                anyhow::Ok(())
+    let (res, io) =
+        wrpc_interface_blobstore::bindings::wrpc::blobstore::blobstore::write_container_data(
+            client.as_ref(),
+            None,
+            &ObjectId {
+                container: "container".to_string(),
+                object: "object".to_string(),
             },
-            async {
-                info!("invoke function");
-                let (res, tx) = client
-                    .invoke_list_container_objects("test", Some(100), None)
-                    .await
-                    .context("failed to invoke")?;
-                let names = res.expect("invocation failed");
-                let names = names
-                    .try_collect::<Vec<_>>()
-                    .await
-                    .context("failed to collect names")?;
-                assert_eq!(names, [["first", "second"]]);
-                info!("transmit async parameters");
-                tx.await.context("failed to transmit parameters")?;
-                info!("async parameters transmitted");
-                Ok(())
-            }
-        )?;
+            Box::pin(stream::iter([Bytes::from("foo"), Bytes::from("bar")])),
+        )
+        .await?;
+    if let Some(io) = io {
+        io.await.expect("failed to complete async I/O");
     }
-    {
-        use wrpc_interface_blobstore::Blobstore;
+    assert_eq!(res, Ok(()));
 
-        let invocations = client
-            .serve_copy_object()
-            .await
-            .context("failed to serve `copy-object`")?;
-        try_join!(
-            async {
-                let AcceptedInvocation {
-                    params: (src, dest),
-                    result_subject,
-                    transmitter,
-                    ..
-                } = pin!(invocations)
-                    .try_next()
-                    .await
-                    .context("failed to receive invocation")?
-                    .context("unexpected end of stream")?;
-                assert_eq!(
-                    src,
-                    ObjectId {
-                        container: "container".to_string(),
-                        object: "object".to_string(),
-                    }
-                );
-                assert_eq!(
-                    dest,
-                    ObjectId {
-                        container: "new-container".to_string(),
-                        object: "new-object".to_string(),
-                    }
-                );
-                info!("transmit response");
-                transmitter
-                    .transmit_static(result_subject, Ok::<_, String>(()))
-                    .await
-                    .context("failed to transmit response")?;
-                info!("response transmitted");
-                anyhow::Ok(())
-            },
-            async {
-                info!("invoke function");
-                let (res, tx) = client
-                    .invoke_copy_object(
-                        &ObjectId {
-                            container: "container".to_string(),
-                            object: "object".to_string(),
-                        },
-                        &ObjectId {
-                            container: "new-container".to_string(),
-                            object: "new-object".to_string(),
-                        },
-                    )
-                    .await
-                    .context("failed to invoke")?;
-                let () = res.expect("invocation failed");
-                info!("transmit async parameters");
-                tx.await.context("failed to transmit parameters")?;
-                info!("async parameters transmitted");
-                Ok(())
-            }
-        )?;
-    }
-    {
-        use wrpc_interface_blobstore::Blobstore;
-
-        let invocations = client
-            .serve_delete_object()
-            .await
-            .context("failed to serve `delete-object`")?;
-        try_join!(
-            async {
-                let AcceptedInvocation {
-                    params: id,
-                    result_subject,
-                    transmitter,
-                    ..
-                } = pin!(invocations)
-                    .try_next()
-                    .await
-                    .context("failed to receive invocation")?
-                    .context("unexpected end of stream")?;
-                assert_eq!(
-                    id,
-                    ObjectId {
-                        container: "container".to_string(),
-                        object: "object".to_string(),
-                    }
-                );
-                info!("transmit response");
-                transmitter
-                    .transmit_static(result_subject, Ok::<_, String>(()))
-                    .await
-                    .context("failed to transmit response")?;
-                info!("response transmitted");
-                anyhow::Ok(())
-            },
-            async {
-                info!("invoke function");
-                let (res, tx) = client
-                    .invoke_delete_object(&ObjectId {
-                        container: "container".to_string(),
-                        object: "object".to_string(),
-                    })
-                    .await
-                    .context("failed to invoke")?;
-                let () = res.expect("invocation failed");
-                info!("transmit async parameters");
-                tx.await.context("failed to transmit parameters")?;
-                info!("async parameters transmitted");
-                Ok(())
-            }
-        )?;
-    }
-    {
-        use wrpc_interface_blobstore::Blobstore;
-
-        let invocations = client
-            .serve_delete_objects()
-            .await
-            .context("failed to serve `delete-objects`")?;
-        try_join!(
-            async {
-                let AcceptedInvocation {
-                    params: (container, objects),
-                    result_subject,
-                    transmitter,
-                    ..
-                } = pin!(invocations)
-                    .try_next()
-                    .await
-                    .context("failed to receive invocation")?
-                    .context("unexpected end of stream")?;
-                assert_eq!(container, "container".to_string());
-                assert_eq!(objects, ["object".to_string(), "new-object".to_string()]);
-                info!("transmit response");
-                transmitter
-                    .transmit_static(result_subject, Ok::<_, String>(()))
-                    .await
-                    .context("failed to transmit response")?;
-                info!("response transmitted");
-                anyhow::Ok(())
-            },
-            async {
-                info!("invoke function");
-                let (res, tx) = client
-                    .invoke_delete_objects("container", ["object", "new-object"])
-                    .await
-                    .context("failed to invoke")?;
-                let () = res.expect("invocation failed");
-                info!("transmit async parameters");
-                tx.await.context("failed to transmit parameters")?;
-                info!("async parameters transmitted");
-                Ok(())
-            }
-        )?;
-    }
-    {
-        use wrpc_interface_blobstore::Blobstore;
-
-        let invocations = client
-            .serve_get_container_data()
-            .await
-            .context("failed to serve `get-container-data`")?;
-        try_join!(
-            async {
-                let AcceptedInvocation {
-                    params: (id, start, end),
-                    result_subject,
-                    transmitter,
-                    ..
-                } = pin!(invocations)
-                    .try_next()
-                    .await
-                    .context("failed to receive invocation")?
-                    .context("unexpected end of stream")?;
-                assert_eq!(
-                    id,
-                    ObjectId {
-                        container: "container".to_string(),
-                        object: "object".to_string(),
-                    }
-                );
-                assert_eq!(start, 42);
-                assert_eq!(end, 4242);
-                info!("transmit response");
-                transmitter
-                    .transmit_static(
-                        result_subject,
-                        Ok::<_, String>(Value::Stream(Box::pin(stream::iter([Ok(vec![
-                            Some(0x42u8.into()),
-                            Some(0xffu8.into()),
-                        ])])))),
-                    )
-                    .await
-                    .context("failed to transmit response")?;
-                info!("response transmitted");
-                anyhow::Ok(())
-            },
-            async {
-                info!("invoke function");
-                let (res, tx) = client
-                    .invoke_get_container_data(
-                        &ObjectId {
-                            container: "container".to_string(),
-                            object: "object".to_string(),
-                        },
-                        42,
-                        4242,
-                    )
-                    .await
-                    .context("failed to invoke")?;
-                let data = res.expect("invocation failed");
-                try_join!(
-                    async {
-                        let data = data
-                            .try_collect::<Vec<_>>()
-                            .await
-                            .context("failed to collect data")?;
-                        assert_eq!(data, [Bytes::from([0x42, 0xff].as_slice())]);
-                        Ok(())
-                    },
-                    async {
-                        info!("transmit async parameters");
-                        tx.await.context("failed to transmit parameters")?;
-                        info!("async parameters transmitted");
-                        Ok(())
-                    }
-                )
-            }
-        )?;
-    }
-    {
-        use wrpc_interface_blobstore::Blobstore;
-
-        let invocations = client
-            .serve_get_object_info()
-            .await
-            .context("failed to serve `get-object-info`")?;
-        try_join!(
-            async {
-                let AcceptedInvocation {
-                    params: id,
-                    result_subject,
-                    transmitter,
-                    ..
-                } = pin!(invocations)
-                    .try_next()
-                    .await
-                    .context("failed to receive invocation")?
-                    .context("unexpected end of stream")?;
-                assert_eq!(
-                    id,
-                    ObjectId {
-                        container: "container".to_string(),
-                        object: "object".to_string(),
-                    }
-                );
-                info!("transmit response");
-                transmitter
-                    .transmit_static(
-                        result_subject,
-                        Ok::<_, String>(ObjectMetadata {
-                            created_at: 42,
-                            size: 4242,
-                        }),
-                    )
-                    .await
-                    .context("failed to transmit response")?;
-                info!("response transmitted");
-                anyhow::Ok(())
-            },
-            async {
-                info!("invoke function");
-                let (res, tx) = client
-                    .invoke_get_object_info(&ObjectId {
-                        container: "container".to_string(),
-                        object: "object".to_string(),
-                    })
-                    .await
-                    .context("failed to invoke")?;
-                let v = res.expect("invocation failed");
-                assert_eq!(
-                    v,
-                    ObjectMetadata {
-                        created_at: 42,
-                        size: 4242,
-                    }
-                );
-                info!("transmit async parameters");
-                tx.await.context("failed to transmit parameters")?;
-                info!("async parameters transmitted");
-                Ok(())
-            }
-        )?;
-    }
-    {
-        use wrpc_interface_blobstore::Blobstore;
-
-        let invocations = client
-            .serve_has_object()
-            .await
-            .context("failed to serve `has-object`")?;
-        try_join!(
-            async {
-                let AcceptedInvocation {
-                    params: id,
-                    result_subject,
-                    transmitter,
-                    ..
-                } = pin!(invocations)
-                    .try_next()
-                    .await
-                    .context("failed to receive invocation")?
-                    .context("unexpected end of stream")?;
-                assert_eq!(
-                    id,
-                    ObjectId {
-                        container: "container".to_string(),
-                        object: "object".to_string(),
-                    }
-                );
-                info!("transmit response");
-                transmitter
-                    .transmit_static(result_subject, Ok::<_, String>(true))
-                    .await
-                    .context("failed to transmit response")?;
-                info!("response transmitted");
-                anyhow::Ok(())
-            },
-            async {
-                info!("invoke function");
-                let (res, tx) = client
-                    .invoke_has_object(&ObjectId {
-                        container: "container".to_string(),
-                        object: "object".to_string(),
-                    })
-                    .await
-                    .context("failed to invoke")?;
-                let v = res.expect("invocation failed");
-                assert!(v);
-                info!("transmit async parameters");
-                tx.await.context("failed to transmit parameters")?;
-                info!("async parameters transmitted");
-                Ok(())
-            }
-        )?;
-    }
-    {
-        use wrpc_interface_blobstore::Blobstore;
-
-        let invocations = client
-            .serve_move_object()
-            .await
-            .context("failed to serve `move-object`")?;
-        try_join!(
-            async {
-                let AcceptedInvocation {
-                    params: (src, dest),
-                    result_subject,
-                    transmitter,
-                    ..
-                } = pin!(invocations)
-                    .try_next()
-                    .await
-                    .context("failed to receive invocation")?
-                    .context("unexpected end of stream")?;
-                assert_eq!(
-                    src,
-                    ObjectId {
-                        container: "container".to_string(),
-                        object: "object".to_string(),
-                    }
-                );
-                assert_eq!(
-                    dest,
-                    ObjectId {
-                        container: "new-container".to_string(),
-                        object: "new-object".to_string(),
-                    }
-                );
-                info!("transmit response");
-                transmitter
-                    .transmit_static(result_subject, Ok::<_, String>(()))
-                    .await
-                    .context("failed to transmit response")?;
-                info!("response transmitted");
-                anyhow::Ok(())
-            },
-            async {
-                info!("invoke function");
-                let (res, tx) = client
-                    .invoke_move_object(
-                        &ObjectId {
-                            container: "container".to_string(),
-                            object: "object".to_string(),
-                        },
-                        &ObjectId {
-                            container: "new-container".to_string(),
-                            object: "new-object".to_string(),
-                        },
-                    )
-                    .await
-                    .context("failed to invoke")?;
-                let () = res.expect("invocation failed");
-                info!("transmit async parameters");
-                tx.await.context("failed to transmit parameters")?;
-                info!("async parameters transmitted");
-                Ok(())
-            }
-        )?;
-    }
-    {
-        use wrpc_interface_blobstore::Blobstore;
-
-        let invocations = client
-            .serve_write_container_data()
-            .await
-            .context("failed to serve `move-object`")?;
-        try_join!(
-            async {
-                let AcceptedInvocation {
-                    params: (id, data),
-                    result_subject,
-                    transmitter,
-                    ..
-                } = pin!(invocations)
-                    .try_next()
-                    .await
-                    .context("failed to receive invocation")?
-                    .context("unexpected end of stream")?;
-                assert_eq!(
-                    id,
-                    ObjectId {
-                        container: "container".to_string(),
-                        object: "object".to_string(),
-                    }
-                );
-                let data = data
-                    .map_ok(|buf| String::from_utf8(buf.to_vec()).unwrap())
-                    .try_collect::<Vec<_>>()
-                    .await
-                    .context("failed to collect data")?;
-                assert_eq!(data, ["test"]);
-                info!("transmit response");
-                transmitter
-                    .transmit_static(result_subject, Ok::<_, String>(()))
-                    .await
-                    .context("failed to transmit response")?;
-                info!("response transmitted");
-                anyhow::Ok(())
-            },
-            async {
-                info!("invoke function");
-                let (res, tx) = client
-                    .invoke_write_container_data(
-                        &ObjectId {
-                            container: "container".to_string(),
-                            object: "object".to_string(),
-                        },
-                        Box::pin(stream::iter(["test".into()])),
-                    )
-                    .await
-                    .context("failed to invoke")?;
-                let () = res.expect("invocation failed");
-                info!("transmit async parameters");
-                tx.await.context("failed to transmit parameters")?;
-                info!("async parameters transmitted");
-                Ok(())
-            }
-        )?;
-    }
+    shutdown.notify_one();
+    server.await??;
 
     stop_tx.send(()).expect("failed to stop NATS.io server");
     nats_server
