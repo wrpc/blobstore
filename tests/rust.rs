@@ -1,3 +1,4 @@
+use core::future::Future;
 use core::pin::Pin;
 use core::time::Duration;
 
@@ -61,14 +62,25 @@ impl<Ctx> wrpc_interface_blobstore::bindings::exports::wrpc::blobstore::blobstor
         name: String,
         limit: Option<u64>,
         offset: Option<u64>,
-    ) -> anyhow::Result<Result<Pin<Box<dyn Stream<Item = Vec<String>> + Send>>, String>> {
+    ) -> anyhow::Result<
+        Result<
+            (
+                Pin<Box<dyn Stream<Item = Vec<String>> + Send>>,
+                Pin<Box<dyn Future<Output = Result<(), String>> + Send>>,
+            ),
+            String,
+        >,
+    > {
         assert_eq!(name, "test");
         assert_eq!(limit, Some(100));
         assert_eq!(offset, None);
-        Ok(Ok(Box::pin(stream::iter([
-            vec!["first".to_string()],
-            vec!["second".to_string()],
-        ]))))
+        Ok(Ok((
+            Box::pin(stream::iter([
+                vec!["first".to_string()],
+                vec!["second".to_string()],
+            ])),
+            Box::pin(async { Ok(()) }),
+        )))
     }
 
     async fn copy_object(
@@ -107,15 +119,23 @@ impl<Ctx> wrpc_interface_blobstore::bindings::exports::wrpc::blobstore::blobstor
         id: ObjectId,
         start: u64,
         end: u64,
-    ) -> anyhow::Result<Result<Pin<Box<dyn Stream<Item = Bytes> + Send>>, String>> {
+    ) -> anyhow::Result<
+        Result<
+            (
+                Pin<Box<dyn Stream<Item = Bytes> + Send>>,
+                Pin<Box<dyn Future<Output = Result<(), String>> + Send>>,
+            ),
+            String,
+        >,
+    > {
         assert_eq!(id.container, "container");
         assert_eq!(id.object, "object");
         assert_eq!(start, 42);
         assert_eq!(end, 4242);
-        Ok(Ok(Box::pin(stream::iter([
-            Bytes::from("foo"),
-            Bytes::from("bar"),
-        ]))))
+        Ok(Ok((
+            Box::pin(stream::iter([Bytes::from("foo"), Bytes::from("bar")])),
+            Box::pin(async { Ok(()) }),
+        )))
     }
 
     async fn get_object_info(
@@ -155,11 +175,14 @@ impl<Ctx> wrpc_interface_blobstore::bindings::exports::wrpc::blobstore::blobstor
         _cx: Ctx,
         id: ObjectId,
         data: Pin<Box<dyn Stream<Item = Bytes> + Send>>,
-    ) -> anyhow::Result<Result<(), String>> {
+    ) -> anyhow::Result<Result<Pin<Box<dyn Future<Output = Result<(), String>> + Send>>, String>>
+    {
         assert_eq!(id.container, "container");
         assert_eq!(id.object, "object");
-        assert_eq!(data.collect::<Vec<Bytes>>().await.concat(), b"foobar");
-        Ok(Ok(()))
+        Ok(Ok(Box::pin(async move {
+            assert_eq!(data.collect::<Vec<Bytes>>().await.concat(), b"foobar");
+            Ok(())
+        })))
     }
 }
 
@@ -242,10 +265,12 @@ async fn rust() -> anyhow::Result<()> {
     if let Some(io) = io {
         io.await.expect("failed to complete async I/O");
     }
+    let (stream, fut) = res.unwrap();
     assert_eq!(
-        res.unwrap().collect::<Vec<_>>().await.concat(),
+        stream.collect::<Vec<_>>().await.concat(),
         ["first", "second"]
     );
+    fut.await.expect("future failed");
 
     let res = wrpc_interface_blobstore::bindings::wrpc::blobstore::blobstore::copy_object(
         client.as_ref(),
@@ -297,7 +322,9 @@ async fn rust() -> anyhow::Result<()> {
     if let Some(io) = io {
         io.await.expect("failed to complete async I/O");
     }
-    assert_eq!(res.unwrap().collect::<Vec<_>>().await.concat(), b"foobar");
+    let (stream, fut) = res.unwrap();
+    assert_eq!(stream.collect::<Vec<_>>().await.concat(), b"foobar");
+    fut.await.expect("future failed");
 
     let res = wrpc_interface_blobstore::bindings::wrpc::blobstore::blobstore::get_object_info(
         client.as_ref(),
@@ -356,7 +383,8 @@ async fn rust() -> anyhow::Result<()> {
     if let Some(io) = io {
         io.await.expect("failed to complete async I/O");
     }
-    assert_eq!(res, Ok(()));
+    let fut = res.unwrap();
+    fut.await.expect("future failed");
 
     shutdown.notify_one();
     server.await??;
