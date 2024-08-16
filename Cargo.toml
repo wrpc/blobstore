@@ -1,6 +1,6 @@
 [package]
 name = "wrpc-interface-blobstore"
-version = "0.17.0"
+version = "0.18.0"
 description = "wRPC blobstore interface"
 authors = ["Roman Volosatovs <rvolosatovs@riseup.net>"]
 categories = ["wasm"]
