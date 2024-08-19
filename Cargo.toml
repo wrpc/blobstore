@@ -1,6 +1,6 @@
 [package]
 name = "wrpc-interface-blobstore"
-version = "0.18.0"
+version = "0.18.1"
 description = "wRPC blobstore interface"
 authors = ["Roman Volosatovs <rvolosatovs@riseup.net>"]
 categories = ["wasm"]
@@ -10,17 +10,15 @@ license = "Apache-2.0 WITH LLVM-exception"
 repository = "https://github.com/wrpc/blobstore"
 
 [dependencies]
-anyhow = { workspace = true, features = ["std"] }
-async-trait = { workspace = true }
-bytes = { workspace = true }
-futures = { workspace = true, features = ["async-await"] }
-tracing = { workspace = true, features = ["attributes"] }
 wit-bindgen-wrpc = { workspace = true }
-wrpc-transport = { workspace = true }
 
 [dev-dependencies]
+anyhow = { workspace = true, features = ["std"] }
 async-nats = { workspace = true }
+bytes = { workspace = true }
+futures = { workspace = true, features = ["async-await"] }
 test-log = { workspace = true, features = ["color", "log", "trace"] }
+tracing = { workspace = true, features = ["attributes"] }
 tokio = { workspace = true, features = [
     "macros",
     "process",
