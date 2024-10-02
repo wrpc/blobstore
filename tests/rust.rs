@@ -4,9 +4,11 @@ use core::time::Duration;
 
 use std::sync::Arc;
 
-use anyhow::Context;
+use anyhow::{bail, Context};
 use bytes::Bytes;
-use futures::{stream, Stream, StreamExt as _};
+use futures::stream::select_all;
+use futures::{stream, Stream, StreamExt as _, TryStreamExt as _};
+use tokio::select;
 use tokio::sync::Notify;
 use tokio::time::sleep;
 use tracing::info;
@@ -20,7 +22,8 @@ use common::start_nats;
 #[derive(Clone)]
 struct Handler;
 
-impl<Ctx> wrpc_interface_blobstore::bindings::exports::wrpc::blobstore::blobstore::Handler<Ctx>
+impl<Ctx: Send>
+    wrpc_interface_blobstore::bindings::exports::wrpc::blobstore::blobstore::Handler<Ctx>
     for Handler
 {
     async fn clear_container(&self, _cx: Ctx, name: String) -> anyhow::Result<Result<(), String>> {
@@ -200,13 +203,36 @@ async fn rust() -> anyhow::Result<()> {
         let client = Arc::clone(&client);
         let shutdown = Arc::clone(&shutdown);
         async move {
-            wrpc_interface_blobstore::bindings::exports::wrpc::blobstore::blobstore::serve_interface(
+            let invocations = wrpc_interface_blobstore::bindings::exports::wrpc::blobstore::blobstore::serve_interface(
                 client.as_ref(),
                 Handler,
-                shutdown.notified(),
             )
             .await
-            .context("failed to serve blobstore")
+            .context("failed to serve blobstore")?;
+            let mut invocations = select_all(invocations.into_iter().map(
+                |(instance, name, invocations)| {
+                    invocations
+                        .try_buffer_unordered(16) // handle up to 16 invocations concurrently
+                        .map(move |res| (instance, name, res))
+                },
+            ));
+            loop {
+                select! {
+                    Some((instance, name, res)) = invocations.next() => {
+                        match res {
+                            Ok(()) => {
+                                info!(instance, name, "invocation successfully handled");
+                            }
+                            Err(err) => {
+                                bail!(err.context("failed to accept invocation"))
+                            }
+                        }
+                    }
+                    _ = shutdown.notified() => {
+                        return Ok(())
+                    }
+                }
+            }
         }
     });
 
