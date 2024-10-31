@@ -1,6 +1,5 @@
 {
   nixConfig.extra-substituters = [
-    "https://wrpc.cachix.org"
     "https://wasmcloud.cachix.org"
     "https://nixify.cachix.org"
     "https://crane.cachix.org"
@@ -9,7 +8,6 @@
     "https://cache.garnix.io"
   ];
   nixConfig.extra-trusted-public-keys = [
-    "wrpc.cachix.org-1:J1xnzWo1nnhlzOmZCA10/5wz87LwCFwQtnqCibCy67w="
     "wasmcloud.cachix.org-1:9gRBzsKh+x2HbVVspreFg/6iFRiD4aOcUQfXVDl3hiM="
     "nixify.cachix.org-1:95SiUQuf8Ij0hwDweALJsLtnMyv/otZamWNRp1Q1pXw="
     "crane.cachix.org-1:8Scfpmn9w+hGdXH/Q9tTLiYAE/2dnJYRJP7kl80GuRk="
@@ -24,7 +22,7 @@
   inputs.nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
   inputs.wit-deps.inputs.nixify.follows = "nixify";
   inputs.wit-deps.inputs.nixlib.follows = "nixlib";
-  inputs.wit-deps.url = "github:bytecodealliance/wit-deps/v0.3.5";
+  inputs.wit-deps.url = "github:bytecodealliance/wit-deps/v0.4.0";
   inputs.wrpc.inputs.nixify.follows = "nixify";
   inputs.wrpc.inputs.nixlib.follows = "nixlib";
   inputs.wrpc.url = "github:wrpc/wrpc";
